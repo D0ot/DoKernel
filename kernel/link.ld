@@ -2,31 +2,30 @@ SECTIONS
 {
     . = 0x8000;
 
-    .text :
+    .text ALIGN(0x200):
     {
         main.o(.text)
         *(.text)
     }
 
-    .data :
+    .data ALIGN(0x200):
     {
         *(.data)
     }
 
-    .rodata :
+    .rodata ALIGN(0x200):
     {
         *(.data)
     }
 
-    .bss :
+    .bss ALIGN(0x200):
     {
         *(.bss)
     }
 
-    allsize = ABSOLUTE(.);
-    .padding : 
+    .check ALIGN(0x200):
     {
-        . = 0x8000 + 512 - allsize - 1;
+        . = .;
         BYTE(0xcc);
     }
 
