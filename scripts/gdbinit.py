@@ -29,6 +29,7 @@ def main():
     myGDBAutoLoadSymFile('debug/boot.debug')
     myGDBAutoLoadSymFile('debug/kernel.debug')
     gdb.execute('dir boot')
-    gdb.execute('b _start')
+    #gdb.execute('b _start')
+    gdb.execute('b main')
 
 main()

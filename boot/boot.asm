@@ -56,6 +56,12 @@ _start:
             mov bx, 0x8000
             mov cx, 0xff
             call _disk_read
+
+            mov ax, 0x02
+            mov bx, 0x8200
+            mov cx, 0xff
+            call _disk_read
+
             jmp 0x0008:0x8000
     _inf_loop_32bit:
             inc eax
