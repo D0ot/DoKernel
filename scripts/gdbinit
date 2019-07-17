@@ -1,0 +1,2 @@
+source /home/doot/.config/gef/.gdbinit-gef.py
+source scripts/gdbinit.py
