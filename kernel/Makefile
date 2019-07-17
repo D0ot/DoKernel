@@ -1,6 +1,6 @@
 include ../config/config.mk
 
-objects = main.o
+objects = main.o terminal.c
 
 kernel.bin : kernel.elf
 	${OBJCOPY} ${OBJCOPY_GENBIN_FLAGS} $< $@
@@ -11,8 +11,8 @@ kernel.debug : kernel.elf
 kernel.elf : ${objects}
 	${CC} ${LINK_FLAGS} -T link.ld -o $@ ${objects}
 
-main.o : main.c
-	${CC} -c main.c -o main.o -std=gnu99 -ffreestanding -O0 -Wall -Wextra -g
+${objects} : %.o : %.c
+	${CC} -c $< -o $@ ${CC_FLAGS}
 
 .PHONY : all obj clean
 all : kernel.debug kernel.bin

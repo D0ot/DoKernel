@@ -4,12 +4,23 @@ SECTIONS
 
     .text :
     {
+        main.o(.text)
         *(.text)
     }
 
     .data :
     {
         *(.data)
+    }
+
+    .rodata :
+    {
+        *(.data)
+    }
+
+    .bss :
+    {
+        *(.bss)
     }
 
     allsize = ABSOLUTE(.);
