@@ -20,6 +20,7 @@ all :
 
 clean : 
 	cd boot && make clean
+	cd kernel && make clean
 	rm -f build/*
 	rm -f debug/*
 	

@@ -11,7 +11,7 @@ BIN = img.bin
 
 AS_FLAGS = -f elf32 
 LINK_FLAGS = -ffreestanding -nostdlib -g
-CC_FLAGS = -std=gnu99 -ffreestanding -O0 -Wall -Wextra -g -O0
+CC_FLAGS = -std=gnu99 -ffreestanding -Wall -Wextra -g
 
 OBJCOPY_GENBIN_FLAGS = -O binary -S
 OBJCOPY_GENSYM_FLAGS = --only-keep-debug

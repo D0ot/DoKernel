@@ -1,6 +1,6 @@
 include ../config/config.mk
 
-objects = main.o terminal.c
+objects = main.o terminal.o jumper.o
 
 kernel.bin : kernel.elf
 	${OBJCOPY} ${OBJCOPY_GENBIN_FLAGS} $< $@
@@ -8,8 +8,11 @@ kernel.bin : kernel.elf
 kernel.debug : kernel.elf
 	${OBJCOPY} ${OBJCOPY_GENSYM_FLAGS} $< $@
 
-kernel.elf : ${objects}
-	${CC} ${LINK_FLAGS} -T link.ld -o $@ ${objects}
+#kernel.elf : ${objects} link.ld
+#	${CC} ${LINK_FLAGS} -T link.ld -o $@ ${objects}
+
+kernel.elf : ${objects} link.ld
+	${LD} -T link.ld -N -e pre_main -o $@ ${objects}
 
 ${objects} : %.o : %.c
 	${CC} -c $< -o $@ ${CC_FLAGS}

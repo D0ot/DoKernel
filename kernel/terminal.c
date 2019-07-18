@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include "terminal.h"
 
-static char *vram = (char*)0xB8000;
-static uint16_t *vram_fast = (uint16_t*)0xB8000;
+static volatile char *vram = (volatile void*)0xB8000;
+static volatile uint16_t *vram_fast = (volatile void*)0xB8000;
 static uint8_t ter_col = 0;
 static uint8_t ter_row = 0;
 
@@ -65,7 +65,8 @@ void ter_scroll()
 
     while(offset < MAX_COL * (MAX_ROW - 1))
     {
-        vram_fast[offset++] = vram_fast[offset + MAX_ROW];
+        vram_fast[offset] = vram_fast[offset + MAX_COL];
+        ++offset;     
     }
 
     // clear bottom line;
