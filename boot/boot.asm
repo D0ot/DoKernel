@@ -52,20 +52,12 @@ _start:
             mov es, ax
             mov esp, 0x7C00
 
-            mov ax, 0x01
+            mov ax, 0x03
             mov bx, 0x8000
-            mov cx, 0xff
+            mov cx, 0x1
             call _disk_read
 
-            mov ax, 0x02
-            mov bx, 0x8200
-            mov cx, 0xff
-            call _disk_read
 
-            ;mov ax, 0x03
-            ;mov bx, 0x8400
-            ;mov cx, 0xff
-            ;call _disk_read
 
             mov esp, 0x17c00
             mov ebp, 0x17d00
@@ -77,57 +69,55 @@ _start:
             jmp _inf_loop_32bit
 
 
-;   ax , index of sector to read, only 7bit works
-;   bx , buffer to store data
-;   cx , size of word(2-byte) to read
-
+;   ax , number of logical sectors to read. 8 bits are valid
+;   bx , buffer to store data, it is an address
+;   cx , index of sector to read, 16 bits are valid
 
 _disk_read: 
-            push ax
-            mov al, 1
             mov dx, 0x1F2
             out dx, al
-            pop ax
+            push ax
 
+            mov al, cl
             mov dx, 0x1F3
-            out dx, al
+            out dx, al          ; LBA 7 - 0
 
+            mov al, ch 
             inc dx      
             mov al, ah
-            out dx, al
+            out dx, al          ; LBA 15 - 8
+
+            pop ax
+            mov cx, ax          ; now cx saves the number of sectors to read
 
             inc dx     
             mov ax, 0x00
-            out dx, al
+            out dx, al          ; LBA 23 - 16
 
             inc dx      
-            mov al, 0xE0
-            out dx, al
+            mov al, 0xE0        
+            out dx, al          ; LBA mode and LBA 27 - 24  
 
             inc dx      
             mov al, 0x20
             out dx, al
+
+            xor edi, edi
+            mov di, bx
+    dr_read_0:
+            push cx
+            mov cx, 256 
+            mov dx, 0x1f7
     dr_wait:
             in al, dx
             and al, 0x88
             cmp al, 0x08
             jnz dr_wait
 
-            push cx
             mov dx, 0x1F0
-
-    dr_read:
-            in ax, dx
-            mov [ds:bx], ax
-            add bx, 2
-            loop dr_read
-
-            pop ax
-            mov cx, 512
-            sub cx, ax
-
-    dr_read_zero: 
-            in ax, dx
-            loop dr_read_zero
+            
+            rep insw 
+            pop cx
+            loop dr_read_0
 
             ret

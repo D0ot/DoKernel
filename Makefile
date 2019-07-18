@@ -13,6 +13,7 @@ all :
 	dd if=/dev/zero of=build/${BIN} count=64
 	dd if=boot/boot.bin of=build/${BIN} seek=0 count=1
 	dd conv=notrunc if=kernel/kernel.bin of=build/${BIN} seek=1
+	dd if=/dev/null of=build/${BIN} bs=1 count=1 seek=16384
 
 
 	cp boot/boot.debug debug/
