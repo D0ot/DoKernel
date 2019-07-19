@@ -73,7 +73,7 @@ int v_sprintf(char *str, const char* format, va_list ap)
         }
     }
 
-    *(str+1) = '\0';
+    *(str) = '\0';
     return str - for_ret;
 
 }
@@ -210,7 +210,7 @@ char *strcpy(char *dest, const char *src)
     {
         *dest++ = *src++;
     }
-    *(dest+1) = '\0';
+    *dest = '\0';
     return ret; 
 }
 

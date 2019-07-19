@@ -5,6 +5,7 @@
 #include "disk.h"
 #include "common.h"
 
+char *buffer = (char*)0x10000;
 
 void main(void)
 {
@@ -17,6 +18,13 @@ void main(void)
     ter_show("Wonderful\n", TER_GREEN | TER_BLUE);
 
     printf("%x%x\n", 0x11223344, 0xffffffff);
+    memset(buffer, '\n', 32);
+    memcpy(buffer + 32, buffer, 32);
+
+    printf("length of \"%s\" : %d\n", "hello", strlen("hello"));
+    strcpy(buffer, "Hello World\n");
+    printf(buffer);
+    
 
 
 
