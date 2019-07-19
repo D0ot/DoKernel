@@ -1,6 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "terminal.h"
+#include "uart.h"
+#include "x86.h"
 
 static volatile char *vram = (volatile void*)0xB8000;
 static volatile uint16_t *vram_fast = (volatile void*)0xB8000;
@@ -40,6 +42,7 @@ void ter_putchar(char ch, char color)
     vram[offset + 1] = color;
 
     ter_col++;
+    ter_update_cur();
 
 }
 
@@ -85,7 +88,6 @@ void ter_clear()
     {
         vram_fast[offset++] = empty_char; 
     }
-    
 }
 
 
@@ -94,7 +96,22 @@ void ter_setcolor(char color)
     ter_color = color;
 }
 
+void ter_init()
+{
+    ter_clear();
+}
+
+void ter_update_cur()
+{
+    uint16_t cursor_pos = ter_row * MAX_COL + ter_col;
+    x86_outb(0x3d4, 0x0f);
+    x86_outb(0x3d5, (cursor_pos) & 0xff);
+    x86_outb(0x3d4, 0x0e);
+    x86_outb(0x3d5, (cursor_pos >> 8) & 0xff);
+}
+
 void putchar(char ch)
 {
     ter_putchar(ch, ter_color);
+    uart_putchar(ch);
 }
