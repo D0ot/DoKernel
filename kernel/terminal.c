@@ -6,7 +6,7 @@ static volatile char *vram = (volatile void*)0xB8000;
 static volatile uint16_t *vram_fast = (volatile void*)0xB8000;
 static uint8_t ter_col = 0;
 static uint8_t ter_row = 0;
-
+static char ter_color = TER_WHITE;
 static const uint8_t MAX_ROW = 25;
 static const uint8_t MAX_COL = 80;
 
@@ -86,4 +86,15 @@ void ter_clear()
         vram_fast[offset++] = empty_char; 
     }
     
+}
+
+
+void ter_setcolor(char color)
+{
+    ter_color = color;
+}
+
+void putchar(char ch)
+{
+    ter_putchar(ch, ter_color);
 }

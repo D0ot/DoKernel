@@ -3,35 +3,42 @@
 
 #include <stdint.h>
 
-void x86_outb(uint16_t port, uint8_t data)
-{
-    uint16_t p = port;
-    uint8_t d = data;
-    asm volatile ("out %0, %1;" : : "a"(d), "d"(p));
-}
-
 static inline uint8_t x86_inb(uint16_t port)
 {
-    uint8_t temp;
-    asm volatile ("in %1, %0;" : "=a"(temp) : "d"(port));
-    return temp;
+    uint8_t data;
+    asm volatile ("in %0, %1;" : "=a"(data) : "d"(port));
+    return data;
+}
+
+static inline void x86_outb(uint16_t port, uint8_t data)
+{
+    asm volatile ("out %1, %0;" : : "a"(data), "d"(port));
 }
 
 static inline uint16_t x86_inw(uint16_t port)
 {
-    uint16_t temp;
-    asm volatile ("in %1, %0;": "=a"(temp) : "d"(port));
-
-    return temp;
-
+    uint16_t data;
+    asm volatile ("in %0, %1;": "=a"(data) : "d"(port));
+    return data;
 }
 
-static inline uint16_t x86_outw(uint16_t port)
+static inline void x86_outw(uint16_t port, uint16_t data)
 {
-    return port;
+    asm volatile ("out %1, %0;" : : "a"(data), "d"(port));
 }
 
+static inline void x86_insw(uint16_t port, uint16_t *buf, uint32_t count_byte)
+{
+    asm volatile (
+        "cld;"
+        "rep insw;"
+        : "=D"(buf), "=c"(count_byte) 
+        : "d"(port), "0"(buf), "1"(count_byte)
+        : "memory", "cc"
+    );
 
+    
+}
 
 
 

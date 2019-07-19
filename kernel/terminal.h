@@ -14,5 +14,10 @@ void ter_setcur(uint8_t row, uint8_t col);
 void ter_show(const char *msg, const char color);
 void ter_scroll();
 void ter_clear();
+void ter_setcolor(char color);
+
+
+// for my C lib
+void putchar(char ch);
 
 #endif 

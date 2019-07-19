@@ -52,15 +52,15 @@ _start:
             mov es, ax
             mov esp, 0x7C00
 
-            mov ax, 0x03
+            mov ax, 0x010
             mov bx, 0x8000
             mov cx, 0x1
             call _disk_read
 
 
 
-            mov esp, 0x17c00
-            mov ebp, 0x17d00
+            mov esp, 0x7c00
+            mov ebp, 0x7c00
 
             jmp 0x0008:0x8000
     _inf_loop_32bit:
