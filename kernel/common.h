@@ -4,11 +4,16 @@
 #include <stddef.h>
 #include <stdarg.h>
 
+typedef void(*out_func_ptr)(char);
+
+void putchar(char ch);
+
 int sprintf(char *str, const char* format, ...);
 int printf(const char* format, ...);
 
 int v_sprintf(char *str, const char* format, va_list ap);
 int v_printf(const char *format, va_list ap);
+int v_printf_callback(const char*format,out_func_ptr out_func, va_list ap);
 
 void *memset(void *ptr, char value, size_t num);
 void *memcpy(void *dest, const void *src, size_t num);

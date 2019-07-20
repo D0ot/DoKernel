@@ -4,6 +4,10 @@
 #include "common.h"
 #include "terminal.h"
 
+void putchar(char ch)
+{
+    ter_putchar(ch);
+}
 
 int sprintf(char *str, const char* format, ...)
 {
@@ -83,24 +87,25 @@ int printf(const char* format, ...)
     int ret;
     va_list ap;
     va_start(ap, format);
-    ret = v_printf(format, ap);
+    ret = v_printf_callback(format, putchar, ap);
     va_end(ap);
     return ret;
 
 }
 
-int v_printf(const char* format, va_list ap)
+
+int v_printf_callback(const char*format, out_func_ptr out_func, va_list ap)
 {
     char buf[256];
     int ret = v_sprintf(buf, format, ap);
     char *iter = buf;
     while(*iter)
     {
-        putchar(*iter++);
+        out_func(*iter++);
     }
     return ret;
-}
 
+}
 
 // inline function to swap two numbers
 inline void swap(char *x, char *y) {

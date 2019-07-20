@@ -14,8 +14,9 @@ static const uint8_t MAX_COL = 80;
 
 
 
-void ter_putchar(char ch, char color)
+void ter_putchar(char ch)
 {   
+    char color = ter_color;
     if(ter_col == 80)
     {
         ter_col = 0;
@@ -55,11 +56,14 @@ void ter_setcur(uint8_t row, uint8_t col)
 
 void ter_show(const char* msg, const char color)
 {
+    char last_color = ter_col;
+    ter_col = color;
     while(*msg)
     {
-        ter_putchar(*msg, color);
+        ter_putchar(*msg);
         ++msg;
     }
+    ter_col = last_color;
 }
 
 void ter_scroll()
@@ -110,8 +114,3 @@ void ter_update_cur()
     x86_outb(0x3d5, (cursor_pos >> 8) & 0xff);
 }
 
-void putchar(char ch)
-{
-    ter_putchar(ch, ter_color);
-    uart_putchar(ch);
-}

@@ -52,7 +52,7 @@ _start:
             mov es, ax
             mov esp, 0x7C00
 
-            mov ax, 0x010
+            mov ax, 0x01f
             mov bx, 0x8000
             mov cx, 0x1
             call _disk_read
