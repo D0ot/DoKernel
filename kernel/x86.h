@@ -3,6 +3,9 @@
 
 #include <stdint.h>
 
+// here starts the inline asm functions
+
+
 static inline uint8_t x86_inb(uint16_t port)
 {
     uint8_t data;
@@ -36,9 +39,8 @@ static inline void x86_insw(uint16_t port, uint16_t *buf, uint32_t count_byte)
         : "d"(port), "0"(buf), "1"(count_byte)
         : "memory", "cc"
     );
-
-    
 }
+
 
 
 

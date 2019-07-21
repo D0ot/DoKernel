@@ -1,6 +1,6 @@
 include ../config/config.mk
 
-objects = main.o terminal.o jumper.o disk.o common.o uart.o kdebug.o
+objects = main.o terminal.o jumper.o disk.o common.o uart.o kdebug.o memory.o
 
 kernel.bin : kernel.elf
 	${OBJCOPY} ${OBJCOPY_GENBIN_FLAGS} $< $@

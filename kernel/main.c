@@ -6,23 +6,22 @@
 #include "common.h"
 #include "uart.h"
 #include "kdebug.h"
+#include "memory.h"
+#include "bios_conv.h"
 
-char *buffer = (char*)0x10000;
+void exit(void);
 
 void main(void)
 {
-    ter_init();
-    printf("Terminal Init Done\n");
-    LOG_DEBUG("Terminal Init Done");
     uart_init();
-    LOG_DEBUG("Uart Init Done");
-    printf("UART Init Done\n");
+    ter_init();
+    memory_init(SMAP_ADDR, SMAP_SIZE);
 
     exit();
 }
 
 void exit(void)
 {
-    LOG_DEBUG("Entering exit loop");
+    LOG_INFO("Entering exit loop");
     while(1);
 }

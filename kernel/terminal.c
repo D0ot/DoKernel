@@ -3,6 +3,7 @@
 #include "terminal.h"
 #include "uart.h"
 #include "x86.h"
+#include "kdebug.h"
 
 static volatile char *vram = (volatile void*)0xB8000;
 static volatile uint16_t *vram_fast = (volatile void*)0xB8000;
@@ -102,7 +103,9 @@ void ter_setcolor(char color)
 
 void ter_init()
 {
+    LOG_INFO("ter_init start")
     ter_clear();
+    LOG_INFO("ter_init done");
 }
 
 void ter_update_cur()
