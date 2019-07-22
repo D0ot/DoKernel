@@ -1,3 +1,5 @@
+DIR_PATH=/home/doot/sysmaking/dokernel
+
 TOOLS_PREFIX = /usr/local/cross/bin/i686-elf-
 
 CC = ${TOOLS_PREFIX}gcc

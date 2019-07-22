@@ -1,8 +1,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include "common.h"
-#include "terminal.h"
+#include "common/common.h"
+#include "driver/terminal.h"
 
 void putchar(char ch)
 {

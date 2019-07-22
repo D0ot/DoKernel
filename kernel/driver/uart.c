@@ -1,6 +1,6 @@
-#include "uart.h"
-#include "x86.h"
-#include "kdebug.h"
+#include "driver/uart.h"
+#include "arch/x86/x86.h"
+#include "log/kdebug.h"
 
 void uart_init()
 {

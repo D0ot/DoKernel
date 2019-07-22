@@ -1,8 +1,8 @@
-#include "memory.h"
-#include "x86.h"
-#include "uart.h"
-#include "common.h"
-#include "kdebug.h"
+#include "mem/memory.h"
+#include "arch/x86/x86.h"
+#include "driver/uart.h"
+#include "common/common.h"
+#include "log/kdebug.h"
 
 
 void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)

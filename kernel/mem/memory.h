@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "x86.h"
+#include "arch/x86/x86.h"
 
 typedef struct AddressRangeDescriptorStructure_tag
 {

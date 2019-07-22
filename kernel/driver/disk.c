@@ -1,8 +1,8 @@
 #include <stdint.h>
 #include <stddef.h>
-#include "disk.h"
-#include "x86.h"
-#include "terminal.h"
+#include "driver/disk.h"
+#include "arch/x86/x86.h"
+#include "driver/terminal.h"
 
 /*
     \brief reading disk.

@@ -8,7 +8,7 @@ SECTIONS
 
     .entry :
     {
-        jumper.o(.text) /* it will  call main() */
+        preboot/jumper.o(.text) /* it will  call main() */
     }
 
     . = ALIGN(4);

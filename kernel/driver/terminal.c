@@ -1,9 +1,9 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "terminal.h"
-#include "uart.h"
-#include "x86.h"
-#include "kdebug.h"
+#include "driver/terminal.h"
+#include "driver/uart.h"
+#include "arch/x86/x86.h"
+#include "log/kdebug.h"
 
 static volatile char *vram = (volatile void*)0xB8000;
 static volatile uint16_t *vram_fast = (volatile void*)0xB8000;

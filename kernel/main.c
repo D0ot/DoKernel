@@ -1,13 +1,13 @@
 #include <stddef.h>
 #include <stdint.h>
-#include "terminal.h"
-#include "x86.h"
-#include "disk.h"
-#include "common.h"
-#include "uart.h"
-#include "kdebug.h"
-#include "memory.h"
-#include "bios_conv.h"
+#include "driver/terminal.h"
+#include "arch/x86/x86.h"
+#include "driver/disk.h"
+#include "common/common.h"
+#include "driver/uart.h"
+#include "log/kdebug.h"
+#include "mem/memory.h"
+#include "defs/bios_conv.h"
 
 void exit(void);
 

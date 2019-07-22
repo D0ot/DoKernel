@@ -1,7 +1,7 @@
-#include "kdebug.h"
-#include "terminal.h"
-#include "common.h"
-#include "uart.h"
+#include "log/kdebug.h"
+#include "driver/terminal.h"
+#include "common/common.h"
+#include "driver/uart.h"
 #include <stdarg.h>
 
 

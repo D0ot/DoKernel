@@ -2,7 +2,7 @@
 #define BIOS_CONV_H
 
 #include "stdint.h"
-#include "memory.h"
+#include "mem/memory.h"
 
 // bios_conv stands for bios convention
 
