@@ -9,6 +9,7 @@
 #include "mem/memory.h"
 #include "defs/bios_conv.h"
 
+void main(void);
 void exit(void);
 
 void main(void)

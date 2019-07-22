@@ -27,6 +27,5 @@ clean :
 	
 
 debug : all
-	date > com1.log
 	gnome-terminal --geometry=80x14+0+1200 -- ./scripts/test.sh
 	gnome-terminal --geometry=130x80+1600+0 -- ./scripts/debugp.sh 

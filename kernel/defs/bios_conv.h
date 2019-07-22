@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include "mem/memory.h"
 
-// bios_conv stands for bios convention
+// bios_conv stands for bios convention, it connects kernel and loader
 
 #define SMAP_BASE (0x8000)
 
