@@ -34,4 +34,7 @@ typedef struct Memory_Region_tag
 
 void memory_init(const Mem_SMAP_Entry* smap, uint32_t size);
 
+// in memory.s
+void memory_switch_gdt(void *gdt_addr);
+
 #endif

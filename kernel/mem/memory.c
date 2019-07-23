@@ -64,9 +64,13 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     
     global_data->mmr.length = (smap[max_usable_length_index].length_high << 32) |
                               (smap[max_usable_length_index].length_low);
+    
 
-    
-    
+    // move gdt to global_data
+    global_data->gdt_addr = &(global_data->gdt_entries[0]);
+    global_data->gdt_limit = 3 * 8 - 1;
+    memcpy(&(global_data->gdt_entries[0]), (void*)(0x7e00), 8 * 3);
+    x86_lgdt(&(global_data->gdt_limit));
 
     
     LOG_INFO("memory_init end");

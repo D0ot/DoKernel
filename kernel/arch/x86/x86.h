@@ -41,6 +41,15 @@ static inline void x86_insw(uint16_t port, uint16_t *buf, uint32_t count_byte)
     );
 }
 
+static inline void x86_lgdt(void *addr)
+{
+    asm volatile (
+        "lgdt [%0];"
+        : /* No output */
+        : "a"(addr)
+    );
+}
+
 
 
 

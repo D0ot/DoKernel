@@ -13,7 +13,7 @@ boot.elf : ${objects}
 
 
 ${objects} : %.o : %.asm
-	${AS} ${AS_FLAGS} -F dwarf -g $< -o $@ 
+	${AS} ${AS_FLAGS} $< -o $@ 
 
 .PHONY : all obj clean 
 

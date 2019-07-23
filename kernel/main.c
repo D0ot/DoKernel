@@ -12,11 +12,14 @@
 void main(void);
 void exit(void);
 
+
+
 void main(void)
 {
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
+
 
     exit();
 }

@@ -11,9 +11,17 @@
 typedef struct Global_Data_Structure_tag
 {
     // Main Memory Region
-    Memory_Region mmr; 
+    Memory_Region mmr;
 
-} Global_Data_Struct;   
+
+    // GDT stuff
+    uint16_t gdt_limit;
+    uint32_t *gdt_addr;
+    
+    uint32_t gdt_entries[16];
+    
+
+} __attribute__((packed)) Global_Data_Struct;   
 
 // size of it cant exceed 3Mib
 

@@ -11,9 +11,9 @@ OBJCOPY = ${TOOLS_PREIFX}objcopy
 BIN = img.bin
 
 
-AS_FLAGS = -f elf32 
+AS_FLAGS = -f elf32 -F dwarf -g
 LINK_FLAGS = -ffreestanding -nostdlib -g
-CC_FLAGS = -std=gnu11 -ffreestanding -m32 -masm=intel -Wall -Wextra -g -O2
+CC_FLAGS = -std=gnu11 -ffreestanding -m32 -masm=intel -Wall -Wextra -g -O0
 
 OBJCOPY_GENBIN_FLAGS = -O binary -S
 OBJCOPY_GENSYM_FLAGS = --only-keep-debug
