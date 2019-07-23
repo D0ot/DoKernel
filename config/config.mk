@@ -13,7 +13,7 @@ BIN = img.bin
 
 AS_FLAGS = -f elf32 
 LINK_FLAGS = -ffreestanding -nostdlib -g
-CC_FLAGS = -std=gnu99 -ffreestanding -m32 -masm=intel -Wall -Wextra -g -O2
+CC_FLAGS = -std=gnu11 -ffreestanding -m32 -masm=intel -Wall -Wextra -g -O2
 
 OBJCOPY_GENBIN_FLAGS = -O binary -S
 OBJCOPY_GENSYM_FLAGS = --only-keep-debug

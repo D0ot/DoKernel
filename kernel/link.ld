@@ -4,7 +4,7 @@ ENTRY(pre_main)
 
 SECTIONS
 {
-    . = 0x10000;
+    . = 0x400000;
 
     .entry :
     {
