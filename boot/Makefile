@@ -8,7 +8,7 @@ boot.bin : boot.elf
 boot.debug : boot.elf
 	${OBJCOPY} ${OBJCOPY_GENSYM_FLAGS} $< $@
 
-boot.elf : ${objects}
+boot.elf : ${objects} link.ld
 	${CC} ${LINK_FLAGS} -T link.ld -o $@ ${objects}
 
 

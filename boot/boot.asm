@@ -1,7 +1,4 @@
-data_addr equ 0x7e00    ; base address
-meminfo_addr equ 0x8000 ; where to store ARDS first 4 Bytes is number of entries
-kernel_addr equ 0x400000 ; where should we load kerenl 
-ards_size equ 0x18      ; Address Range Descriptor Structure Size
+%include "defs.asm"
 
 SECTION .mbrcheck
             db 0x55
@@ -20,9 +17,19 @@ _start:
             mov ss, ax
             mov es, ax 
             mov sp, 0x7c00
+
+            mov ax, 1
+            mov bx, 0x9000
+            mov cx, 1
+            call _disk_read_16
+
             mov di, meminfo_addr
+            clc
             call _get_meminfo
             
+            mov ax, 1
+
+
             xor ax, ax
             mov ss, ax
             mov bx, 0x7e00
@@ -64,7 +71,7 @@ _start:
 try_read_disk:
             mov ax, 0x1F
             mov ebx, kernel_addr 
-            mov ecx, 0x1
+            mov ecx, 0x2
             mov bp, 0
             mov si, 0
             mov di, 0
@@ -80,11 +87,77 @@ try_read_disk:
             hlt
             jmp _inf_loop_32bit
 
+;   ax , number of logical sectors to read. 8 bits are valid, 0 indicates 256 sectors
+;   bx , buffer to store data, it is an address, 16bit are all valid 
+;   cx , index of sector to read, lower 16 bits are valid
+
+[BITS 16]
+_disk_read_16: 
+            mov dx, 0x1F2
+            out dx, al
+            push ax
+
+            mov al, cl
+            mov dx, 0x1F3
+            out dx, al          ; LBA 7 - 0
+
+            mov al, ch 
+            inc dx 
+            out dx, al          ; LBA 15 - 8
+
+            inc dx     
+            mov al, 0
+            out dx, al          ; LBA 23 - 16
+
+            inc dx
+            mov al, 0xE0        
+            out dx, al          ; LBA mode and LBA 27 - 24  
+
+            pop ax
+            mov cx, ax          ; now cx saves the number of sectors to read
+
+            inc dx      
+            mov al, 0x20
+            out dx, al
+
+    dr_read_0_16:
+            push cx
+            mov dx, 0x1f7
+    dr_wait_16:
+
+            in al, dx
+            test al, 0x80
+            jnz dr_wait_16
+
+            test al, 0x01
+            jnz dr_read_error_ret_16
+            
+            test al, 0x08
+            jz dr_wait_16
+            
+            mov dx, 0x1F0
+            mov cx, 256 
+    dr_read_loop_16:
+            in ax, dx
+            mov [bx], ax
+            add bx, 2
+            loop dr_read_loop_16
+
+            pop cx
+            loop dr_read_0_16
+
+            clc
+            ret
+    dr_read_error_ret_16:
+            stc
+            ret
+
+SECTION .text.1
 
 ;   ax , number of logical sectors to read. 8 bits are valid, 0 indicates 256 sectors
 ;   ebx , buffer to store data, it is an address, 32bit are all valid 
 ;   ecx , index of sector to read, lower 28 bits are valid
-
+[Bits 32]
 _disk_read: 
             mov dx, 0x1F2
             out dx, al
@@ -122,10 +195,6 @@ _disk_read:
             push cx
             mov dx, 0x1f7
     dr_wait:
-            ;in al, dx
-            ;and al, 0x88
-            ;cmp al, 0x08
-            ;jnz dr_wait
 
             in al, dx
             test al, 0x80
@@ -154,9 +223,10 @@ _disk_read:
             stc
             ret
 
-            [Bits 16]
 ; \brief get memory infomation of the machine
 ; \param es:di is buffer, first 4 bytes is numbre of entries in list, the following it is ARDS entries
+[BITS 16]
+global _get_meminfo
 _get_meminfo:
             xor bp, bp
 
@@ -216,4 +286,4 @@ _get_meminfo:
 ; if ecx is zero, skip it
 ; if ebx is zero, end it
 ; if, after int 15h , carry flag is set, end it
-            
+
