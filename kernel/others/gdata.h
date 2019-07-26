@@ -13,7 +13,6 @@ typedef struct Global_Data_Structure_tag
     // Main Memory Region
     Memory_Region mmr;
 
-
     // GDT stuff
     uint16_t gdt_limit;
     uint32_t *gdt_addr;

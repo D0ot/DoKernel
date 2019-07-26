@@ -1,9 +1,9 @@
 include config/config.mk
 
 
-.PHONY: all clean debug
+.PHONY: all clean debug defs
 
-all : 
+all : defs
 	cd boot && make all
 	cd kernel && make all
 
@@ -24,6 +24,9 @@ clean :
 	cd kernel && make clean
 	rm -f build/*
 	rm -f debug/*
+
+defs :
+	echo "not impelemented"
 	
 
 debug : all

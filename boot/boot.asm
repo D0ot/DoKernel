@@ -19,7 +19,7 @@ _start:
             mov sp, 0x7c00
 
             mov ax, 1
-            mov bx, 0x9000
+            mov bx, lib_addr
             mov cx, 1
             call _disk_read_16
 

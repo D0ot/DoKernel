@@ -1,0 +1,3 @@
+# the char at where a line start is a guard, indicating it is a comment line
+boot/defs.asm
+kernel/defs/defs.h
