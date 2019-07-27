@@ -10,6 +10,10 @@
 
 typedef struct Global_Data_Structure_tag
 {
+    // Page Directory Entries
+    uint32_t pdes[1024];
+
+    
     // Main Memory Region
     Memory_Region mmr;
 

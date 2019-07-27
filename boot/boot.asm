@@ -78,6 +78,30 @@ try_read_disk:
             call _disk_read
             jc try_read_disk
 
+            mov eax, cr4
+            or eax, (1 << 4) 
+            mov cr4, eax    ;enable CR4.PSE to enable 4M-Byte Page size
+
+            mov eax, 0x01
+            cpuid
+            test edx, (1 << 16) ; if not support PAT(page-attribute table), jumping to inf_loop
+            jz _inf_loop_32bit
+
+            ; set PDE table address
+            mov eax, (page_dir_addr + (11b << 3))
+            mov cr3, eax
+
+            ; config PDE
+            mov dword [page_dir_addr], PDE_0
+            mov dword [page_dir_addr + 1 * 4], PDE_1
+            mov dword [page_dir_addr + 511 * 4], PDE_511
+
+            ; enable Paging
+
+            mov eax, cr0
+            or eax, (1b << 31)
+            mov cr0, eax
+
             mov esp, 0x7c00
             mov ebp, 0x7c00
 
