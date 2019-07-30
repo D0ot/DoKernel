@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include "mem/memory.h"
 #include "arch/x86/x86.h"
+#include "arch/x86/paging.h"
 #include "driver/uart.h"
 #include "common/common.h"
 #include "log/kdebug.h"
@@ -71,6 +72,39 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     global_data->gdt_limit = 3 * 8 - 1;
     memcpy(&(global_data->gdt_entries[0]), (void*)(0x7e00), 8 * 3);
     x86_lgdt(&(global_data->gdt_limit));
+    memory_init_flush_0();
+
+    uint32_t page_number = global_data->mmr.length / (1024*4);
+    uint32_t mem_res = global_data->mmr.length % (1024*4);
+    global_data->mmr.length -= mem_res; // some of the memory is "useless"
+
+    uint32_t bud_ctrl_size = sizeof(Buddy_Element) * page_number;
+
+    //add a Entry in Page Directory
+    Page_Directory_Entry * pde_ptr = &(global_data->pdes[2]);
+    memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
+    pde_ptr->p = 1;     // present
+    pde_ptr->rw = 1;    // allow write to the page
+    pde_ptr->us = 0;    // user-mode accessed not allowed
+    pde_ptr->pwt = 0;   // disable write-through
+    pde_ptr->pcd = 0;   // enable  cache
+    pde_ptr->ps = 1;    // ps set, 4M page
+    pde_ptr->address = (0x02 << 22); // page to  0x800000 ~ 0xC00000
+
+
+
+    
+
+
+    
+
+    
+
+
+
+    
+
+
 
     
     LOG_INFO("memory_init end");

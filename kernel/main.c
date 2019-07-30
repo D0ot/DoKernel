@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "driver/terminal.h"
 #include "arch/x86/x86.h"
+#include "arch/x86/paging.h"
 #include "driver/disk.h"
 #include "common/common.h"
 #include "driver/uart.h"
@@ -19,7 +20,7 @@ void main(void)
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
-
+    LOG_DEBUG("%d", sizeof(Page_Directory_Entry));
 
     exit();
 }

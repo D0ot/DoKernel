@@ -8,5 +8,4 @@ page_dir_addr equ 0x100000  ; where Page Directory entries are stored
 ; entries in page directory
 PDE_0 equ (0x0 << 22) + (10011011b)
 PDE_1 equ (0x1 << 22) + (10011011b)
-
 PDE_511 equ (0x200 << 22) + (10011011b)

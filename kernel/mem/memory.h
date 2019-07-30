@@ -9,6 +9,9 @@
 #define MEM_SMAP_TYPE_RESERVED (2)
 
 
+
+
+
 typedef struct AddressRangeDescriptorStructure_tag
 {
     uint32_t base_address_low;
@@ -32,9 +35,25 @@ typedef struct Memory_Region_tag
     uint64_t length;
 } Memory_Region;
 
+
+// for buddy system
+typedef struct Buddy_Element_tag
+{
+    // the size of every buddy block is (4K-Byte * level^2)
+    uint16_t level;
+    
+    // if it is used , set the flags
+    uint8_t used : 1;
+
+    // for later unknown use...
+    uint16_t reserved:15;
+} __attribute__((packed)) Buddy_Element;
+
+
 void memory_init(const Mem_SMAP_Entry* smap, uint32_t size);
 
-// in memory.s
+// in memory_asm.asm
 void memory_switch_gdt(void *gdt_addr);
+void memory_init_flush_0();
 
 #endif

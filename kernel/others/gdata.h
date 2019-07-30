@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "mem/memory.h"
+#include "arch/x86/paging.h"
 #include "defs/bios_conv.h"
 
 
@@ -11,8 +12,7 @@
 typedef struct Global_Data_Structure_tag
 {
     // Page Directory Entries
-    uint32_t pdes[1024];
-
+    Page_Directory_Entry pdes[1024];
     
     // Main Memory Region
     Memory_Region mmr;
@@ -21,7 +21,9 @@ typedef struct Global_Data_Structure_tag
     uint16_t gdt_limit;
     uint32_t *gdt_addr;
     
-    uint32_t gdt_entries[16];
+    uint32_t gdt_entries[32];
+    
+    Buddy_Element *buddies_ptr;
     
 
 } __attribute__((packed)) Global_Data_Struct;   
