@@ -21,6 +21,7 @@ void main(void)
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
     LOG_DEBUG("%d", sizeof(Page_Directory_Entry));
+    LOG_DEBUG("%d", sizeof(Buddy_Element));
 
     exit();
 }

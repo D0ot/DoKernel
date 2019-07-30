@@ -60,11 +60,9 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
     LOG_INFO("Index of memory region with maximum length : %d", max_usable_length_index);
 
-    global_data->mmr.base = ((smap[max_usable_length_index].base_address_high << 32) |
-                             (smap[max_usable_length_index].base_address_low)) + KERNEL_SIZE + GLOBAL_DATA_SIZE;
+    global_data->mmr.base = (smap[max_usable_length_index].base_address_low) + KERNEL_SIZE + GLOBAL_DATA_SIZE;
     
-    global_data->mmr.length = (smap[max_usable_length_index].length_high << 32) |
-                              (smap[max_usable_length_index].length_low);
+    global_data->mmr.length = (smap[max_usable_length_index].length_low) - KERNEL_SIZE - GLOBAL_DATA_SIZE;
     
 
     // move gdt to global_data
@@ -74,13 +72,25 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     x86_lgdt(&(global_data->gdt_limit));
     memory_init_flush_0();
 
+    buddy_init();
+
+
+    
+    LOG_INFO("memory_init end");
+}
+
+void buddy_init()
+{
+    LOG_INFO("buddy_init start");
     uint32_t page_number = global_data->mmr.length / (1024*4);
+    LOG_INFO("Avaliable page_nubmer : 0x%x", page_number);
     uint32_t mem_res = global_data->mmr.length % (1024*4);
+    LOG_INFO("Abandoned memory, mem_res : 0x%x", mem_res);
     global_data->mmr.length -= mem_res; // some of the memory is "useless"
 
-    uint32_t bud_ctrl_size = sizeof(Buddy_Element) * page_number;
+    global_data->buddies_number = page_number;
 
-    //add a Entry in Page Directory
+    //add a Entry in Page Directory to store buddies element
     Page_Directory_Entry * pde_ptr = &(global_data->pdes[2]);
     memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
     pde_ptr->p = 1;     // present
@@ -89,23 +99,32 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     pde_ptr->pwt = 0;   // disable write-through
     pde_ptr->pcd = 0;   // enable  cache
     pde_ptr->ps = 1;    // ps set, 4M page
-    pde_ptr->address = (0x02 << 22); // page to  0x800000 ~ 0xC00000
+    pde_ptr->address = ((uint32_t)0x02 << 10); // 0x800000 ~ 0xC00000
+    // map (0x800000 ~ 0xC00000) to the same
+
+    Buddy_Element *buddies_ptr = (Buddy_Element*)(0x800000);
+    memset(buddies_ptr, 0, sizeof(Buddy_Element) * page_number); //clear the new 4M page
+
+    for(uint32_t i = 0; i < page_number;)
+    {
+        LOG_DEBUG("try to found buddy");
+        uint32_t avaliable_now = page_number - i;
+        uint8_t max_power = 0;
+        while(poweru32(2, max_power) <= avaliable_now && (max_power < 16))
+        {
+            ++max_power;
+        }
+
+        buddies_ptr[i].level = max_power - 1;   // we found the highest level of this buddy!
+        LOG_INFO("A buddy found at %d, level : %d ", i, max_power - 1)
+        i += poweru32(2, max_power - 1);
+    }
+
 
 
 
     
 
 
-    
-
-    
-
-
-
-    
-
-
-
-    
-    LOG_INFO("memory_init end");
+    LOG_INFO("buddy_init end");
 }

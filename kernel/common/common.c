@@ -108,7 +108,7 @@ int v_printf_callback(const char*format, out_func_ptr out_func, va_list ap)
 }
 
 // inline function to swap two numbers
-inline void swap(char *x, char *y) {
+void swap(char *x, char *y) {
 	char t = *x; *x = *y; *y = t;
 }
 
@@ -219,10 +219,10 @@ char *strcpy(char *dest, const char *src)
     return ret; 
 }
 
-void *memset(void *ptr, char value, size_t num)
+void *memset(void *ptr, char value, uint32_t num)
 {
     char *iter = ptr;
-    for(size_t i = 0; i < num; ++i)
+    for(uint32_t i = 0; i < num; ++i)
     {
         iter[i] = value;
     }
@@ -246,3 +246,12 @@ void *memmove(void *dest, const void *src, size_t num)
     return memcpy(dest, src, num);
 }
 
+uint32_t poweru32(uint32_t b, uint32_t p)
+{
+    uint32_t ret = 1;
+    for(uint32_t i = 0; i < p; ++i)
+    {
+        ret *= b;
+    }
+    return ret;
+}

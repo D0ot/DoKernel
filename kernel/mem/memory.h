@@ -40,13 +40,18 @@ typedef struct Memory_Region_tag
 typedef struct Buddy_Element_tag
 {
     // the size of every buddy block is (4K-Byte * level^2)
-    uint16_t level;
-    
+    uint8_t level;
+
+    // used to specify the block at left or right at a level
+    // BIT[15...0], bit 0 is left-right state of level 0.
+    // 0 for left, 1 for right
+    uint16_t lr;
+
     // if it is used , set the flags
     uint8_t used : 1;
 
     // for later unknown use...
-    uint16_t reserved:15;
+    uint8_t reserved:7;
 } __attribute__((packed)) Buddy_Element;
 
 
@@ -55,5 +60,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size);
 // in memory_asm.asm
 void memory_switch_gdt(void *gdt_addr);
 void memory_init_flush_0();
+
+void buddy_init();
 
 #endif
