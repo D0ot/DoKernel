@@ -8,5 +8,6 @@
 #define ARDS_SIZE (0x18)
 #define LIB_ADDR (0x9000)
 
+#define BUDDY_SYSTEM_SIZE (0x400000)
 
 #endif

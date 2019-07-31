@@ -19,5 +19,5 @@ OBJCOPY_GENBIN_FLAGS = -O binary -S
 OBJCOPY_GENSYM_FLAGS = --only-keep-debug
 
 
-CLEAN_CMD = rm -f *.elf *.bin *.o *.debug
+CLEAN_CMD = find . | grep -e  "\.o" -e "\.elf" -e "\.bin" -e "\.debug" | xargs rm 
 

@@ -248,10 +248,32 @@ void *memmove(void *dest, const void *src, size_t num)
 
 uint32_t poweru32(uint32_t b, uint32_t p)
 {
+    if(b == 2)
+    {
+        return powerof2(p);
+    }
     uint32_t ret = 1;
     for(uint32_t i = 0; i < p; ++i)
     {
         ret *= b;
     }
     return ret;
+}
+
+uint32_t powerof2(uint8_t p)
+{
+    static uint32_t table[] =
+    {
+        0x01, 0x02, 0x04, 0x08, //8
+        0x10, 0x20, 0x40, 0x80, //8*16
+        0x100, 0x200, 0x400, 0x800, // 2K
+        0x1000, 0x2000, 0x4000, 0x8000,// 32K
+        0x10000, 0x20000, 0x40000, 0x80000,// 512K
+        0x100000, 0x200000, 0x400000, 0x800000,// 8M
+        0x1000000, 0x2000000, 0x4000000, 0x8000000,// 128M
+        0x10000000, 0x20000000, 0x40000000, 0x80000000, // 2G
+    };
+    
+    return table[p];
+    
 }

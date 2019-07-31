@@ -15,6 +15,9 @@ typedef struct Global_Data_Structure_tag
     Page_Directory_Entry pdes[1024];
     
     // Main Memory Region
+    // kerne not contained
+    // gdata not contained
+    // Buddy elements not contained
     Memory_Region mmr;
 
     // GDT stuff
@@ -32,6 +35,6 @@ typedef struct Global_Data_Structure_tag
 // size of it cant exceed 3Mib
 
 
-Global_Data_Struct* global_data = (Global_Data_Struct*)(MAIN_PHYSICAL_MEMORY_START);
+extern Global_Data_Struct* global_data;
 
 #endif 

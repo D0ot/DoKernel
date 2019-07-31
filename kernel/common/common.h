@@ -28,6 +28,9 @@ char *itoa(int value, char *str, int base);
 char *utoa(unsigned value, char *str, unsigned base);
 
 
+uint32_t powerof2(uint8_t p);
 uint32_t poweru32(uint32_t b, uint32_t p);
+
+
 
 #endif 

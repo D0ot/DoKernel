@@ -1,7 +1,8 @@
 include ../config/config.mk
 
 objects = main.o driver/terminal.o preboot/jumper.o \
-	driver/disk.o common/common.o driver/uart.o log/kdebug.o mem/memory.o
+	driver/disk.o common/common.o driver/uart.o log/kdebug.o mem/memory.o \
+	others/gdata.o
 
 asm_objects = mem/memory_asm.o
 

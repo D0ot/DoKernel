@@ -30,5 +30,4 @@ void log(const char *format, ...);
 void log_level(int level, const char *format, ...);
 
 
-
 #endif 
