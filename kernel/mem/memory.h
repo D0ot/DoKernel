@@ -55,10 +55,11 @@ typedef struct Buddy_Element_tag
     // valid for first Buddy_Element in Buddy Block
     uint8_t used : 1;
 
-    // it is used by another Buddy_Element 
-    uint8_t level_used : 1;
+    // is it a block containing infomation?
+    // if set, it contains infomation.
+    uint8_t is_info_block: 1;
 
-    // for later unknown use...
+    // for later use...
     uint8_t reserved:6;
 } __attribute__((packed)) Buddy_Element;
 

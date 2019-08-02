@@ -270,7 +270,7 @@ void* buddy_alloc_bylevel(uint8_t level)
 
         for(uint32_t i = 1; i < powerof2(level); ++i)
         {
-            buddies_ptr[iter + i].level_used = 1;
+            buddies_ptr[iter + i].is_info_block = 1;
         }
         
         // return a valid addres
@@ -299,7 +299,7 @@ void* buddy_alloc_bylevel(uint8_t level)
     
     for(uint32_t i = 1; i < powerof2(level); ++i)
     {
-        buddies_ptr[min_index + i].level_used = 1;
+        buddies_ptr[min_index + i].is_info_block = 0;
     }
     buddies_ptr[min_index].used = 1; 
 
@@ -373,10 +373,33 @@ uint8_t buddy_free_byindex(uint32_t index)
     {
         uint8_t level = buddies_ptr[index].level;
         uint8_t lr = (buddies_ptr[index].lr >> level) & 0x01;
-        if(lr)
+        if(!lr)
         {
-            // at left
+            // index is at left
+            uint32_t ele_at_right = index + powerof2(level);
             
+            // we should check if the buddy element at the right is used or not
+            if(buddies_ptr[ele_at_right].level_used)
+            {
+                // used by a higher level buddy element than 'level' above
+                // we cannot combine two into one
+                break;
+            } else
+            {
+                // further check
+
+                // not used and the levels are same
+
+                if(!buddies_ptr[ele_at_right].used &&
+                    buddies_ptr[ele_at_right].level == level)
+                {
+                    // we can do the combine
+                    buddies_ptr[index].
+                }
+
+            }
+
+
 
 
         } 
