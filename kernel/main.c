@@ -22,17 +22,31 @@ void main(void)
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
 
-    buddy_debug_show();
-    Buddy_Block bb =  buddy_alloc_bypage(1);
-    LOG_DEBUG("get a 1 page : 0x%x, addr : 0x%x ", bb.size, bb.addr);
-    buddy_debug_show();
-    buddy_alloc_bypage(3);
-    buddy_debug_show();
+    uint32_t page_counts[] = {
+        11, 33, 55, 77, 99, 22, 44, 66, 88, 1000, 
+        33, 55, 1024, 33, 9, 7, 1, 3, 4, 5, 6, 7,
+        1000, 3000, 50, 1, 1, 1, 1, 1, 1, 1, 1};
 
-    for(uint32_t i = 0; i < global_data->buddies_number; ++i)
+    Buddy_Block bbs[100];
+
+    buddy_debug_show();
+    for(uint8_t i = 0; i < sizeof(page_counts)/sizeof(*page_counts); ++i)
     {
-        LOG_DEBUG("buddies_ptr[%d].lr = %d", i, global_data->buddies_ptr[i].lr);
+        bbs[i] = buddy_alloc_bypage(page_counts[i]);
+        LOG_DEBUG("After Alloc %d pages at 0x%x", page_counts[i], bbs[i].addr);
+        buddy_debug_show();
     }
+
+
+    buddy_debug_show();
+    for(uint8_t i = 0; i < sizeof(page_counts)/sizeof(*page_counts); ++i)
+    {
+        buddy_free_byaddr(bbs[i].addr);
+        LOG_DEBUG("After free pages at 0x%x", bbs[i].addr);
+        buddy_debug_show();
+    }
+
+
 
 
     exit();

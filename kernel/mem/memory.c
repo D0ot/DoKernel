@@ -94,8 +94,11 @@ void buddy_init()
 
     global_data->buddies_number = page_number;
 
+
+
     //add a Entry in Page Directory to store buddies element
     Page_Directory_Entry * pde_ptr = &(global_data->pdes[2]);
+
     memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
     pde_ptr->p = 1;     // present
     pde_ptr->rw = 1;    // allow write to the page
@@ -105,6 +108,7 @@ void buddy_init()
     pde_ptr->ps = 1;    // ps set, 4M page
     pde_ptr->address = ((uint32_t)0x02 << 10); // 0x800000 ~ 0xC00000
     // map (0x800000 ~ 0xC00000) to the same
+
 
     Buddy_Element *buddies_ptr = (Buddy_Element*)(0x800000);
     global_data->buddies_ptr = buddies_ptr;
@@ -121,6 +125,7 @@ void buddy_init()
 
         uint8_t found_buddy_level = max_power - 1;
         buddies_ptr[i].level = found_buddy_level;   // we found the highest level buddy from avaliable page!
+        buddies_ptr[i].is_info_block = 1;           // indicating that it is a control block
         LOG_INFO("A buddy found at index : 0x%x, level : %d, addr : 0x%x ", i, found_buddy_level, buddy_get_addr_byindex(i));
 
 
@@ -244,8 +249,8 @@ void* buddy_alloc_bylevel(uint8_t level)
                     {
                         // the block found is smaller than min_index, replace min_index with new one.
                         min_index = iter;
-                        iter += powerof2(buddies_ptr[iter].level);
                     }
+                    iter += powerof2(buddies_ptr[iter].level);
 
                 }else
                 {
@@ -274,7 +279,7 @@ void* buddy_alloc_bylevel(uint8_t level)
         }
         
         // return a valid addres
-        return buddy_get_addr_byindex(min_index); 
+        return buddy_get_addr_byindex(iter); 
     }
 
     if(iter >= buddies_number && !min_index_init_guard)
@@ -293,14 +298,13 @@ void* buddy_alloc_bylevel(uint8_t level)
         // do split sutff
         uint8_t new_level = buddies_ptr[min_index].level - 1;
         buddies_ptr[min_index].level = new_level;
+        buddies_ptr[min_index].is_info_block = 1;
+
         buddies_ptr[min_index + powerof2(new_level)].level = new_level;
+        buddies_ptr[min_index + powerof2(new_level)].is_info_block = 1;
     }
 
-    
-    for(uint32_t i = 1; i < powerof2(level); ++i)
-    {
-        buddies_ptr[min_index + i].is_info_block = 0;
-    }
+
     buddies_ptr[min_index].used = 1; 
 
     return buddy_get_addr_byindex(min_index);
@@ -362,56 +366,72 @@ uint8_t buddy_free_byindex(uint32_t index)
 
     Buddy_Element *buddies_ptr = global_data->buddies_ptr;
 
-    if(buddies_ptr[index].used)
+    if(!buddies_ptr[index].used)
     {
         LOG_ERROR("buddy_free_byindex, free the unused index:(0x%x)", index);
         while(1);
     }
 
-    uint8_t c = 1;
-    while(c)
+    // index of currently solving buddy element
+    uint32_t current_index = index;
+    while(1)
     {
-        uint8_t level = buddies_ptr[index].level;
-        uint8_t lr = (buddies_ptr[index].lr >> level) & 0x01;
+        uint8_t level = buddies_ptr[current_index].level;
+        uint8_t lr = (buddies_ptr[current_index].lr >> level) & 0x01;
+
+
         if(!lr)
         {
-            // index is at left
-            uint32_t ele_at_right = index + powerof2(level);
-            
-            // we should check if the buddy element at the right is used or not
-            if(buddies_ptr[ele_at_right].level_used)
+            // current_index is at left
+            uint32_t ele_at_right = current_index + powerof2(level);
+
+            // if ele_at_right satisfies the following three conditions
+            // we can do the combinatin
+            if(buddies_ptr[ele_at_right].is_info_block &&
+               !buddies_ptr[ele_at_right].used &&
+               buddies_ptr[ele_at_right].level == level)
             {
-                // used by a higher level buddy element than 'level' above
-                // we cannot combine two into one
-                break;
-            } else
-            {
-                // further check
-
-                // not used and the levels are same
-
-                if(!buddies_ptr[ele_at_right].used &&
-                    buddies_ptr[ele_at_right].level == level)
-                {
-                    // we can do the combine
-                    buddies_ptr[index].
-                }
-
+                buddies_ptr[current_index].level = level + 1;
+                buddies_ptr[ele_at_right].is_info_block = 0;
+                
+                // we dont have to update current_index
+                // for we are the left
             }
-
-
-
+            else
+            {
+                // combination can not continue
+                // set used flag to 0
+                buddies_ptr[current_index].used = 0;
+                break;
+            }
+            
 
         } 
         else
         {
-            // at right
+            // current_index is at right
+            uint32_t ele_at_left = current_index - powerof2(level);
+
+            if(buddies_ptr[ele_at_left].is_info_block &&
+               !buddies_ptr[ele_at_left].used &&
+               buddies_ptr[ele_at_left].level == level)
+            {
+                buddies_ptr[ele_at_left].level = level + 1;
+                buddies_ptr[current_index].is_info_block = 0;
+
+                current_index = ele_at_left;
+            }
+            else
+            {
+                buddies_ptr[current_index].used = 0;
+                break;
+            }
 
         }
     }
 
 
-    
+    return 0;    
 }
 
 
@@ -435,6 +455,7 @@ uint8_t buddy_free_byaddr(void* addr)
 
     uint32_t buddy_index = diff / PAGE_SIZE;
 
+    LOG_INFO("free index 0x%x", buddy_index);
     return buddy_free_byindex(buddy_index);
 
 }

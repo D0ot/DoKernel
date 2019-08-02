@@ -93,6 +93,7 @@ uint8_t buddy_free_byaddr(void* addr);
 
 // for the function below
 // real memory operation not involve, purely logical operation
+// or we can say, they are computation
 uint8_t buddy_find_level(uint32_t page_count);
 void* buddy_get_addr_byindex(uint32_t buddy_ele_index);
 uint32_t buddy_get_size_byindex(uint32_t buddy_ele_index);
