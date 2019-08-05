@@ -10,6 +10,7 @@
 #include "mem/memory.h"
 #include "defs/bios_conv.h"
 #include "others/gdata.h"
+#include "driver/acpi.h"
 
 void main(void);
 void exit(void);
@@ -21,6 +22,8 @@ void main(void)
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
+
+
 
 
     exit();

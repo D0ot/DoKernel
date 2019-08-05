@@ -219,6 +219,20 @@ char *strcpy(char *dest, const char *src)
     return ret; 
 }
 
+int strcmp(char *s1, char *s2)
+{
+    while(*s1 && *s2)
+    {
+        if(*s1 != *s2)
+        {
+            break;
+        }
+        ++s1;
+        ++s2;
+    }
+    return *s1 - *s2;
+}
+
 void *memset(void *ptr, char value, uint32_t num)
 {
     char *iter = ptr;
@@ -276,4 +290,29 @@ uint32_t powerof2(uint8_t p)
     
     return table[p];
     
+}
+
+
+uint8_t checksum(uint8_t *p, uint32_t count)
+{
+    uint8_t sum = 0; // the checksum value
+    for(uint8_t *iter_ptr = p; iter_ptr != p + count; ++iter_ptr)
+    {
+        sum += *iter_ptr;
+    }
+
+    return sum;
+}
+
+uint8_t strmatch(const char *s1, const char *s2,  uint32_t count)
+{
+    for(uint32_t i = 0; i != count; ++i)
+    {
+        if(*(s1+i) != *(s2+i))
+        {
+            return 0;
+        }
+        
+    }
+    return 1;
 }
