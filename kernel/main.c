@@ -24,7 +24,7 @@ void main(void)
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
-    simple_alloc_free_test();
+    fixed_address_test();
 
 
 

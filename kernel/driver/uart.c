@@ -30,5 +30,5 @@ void uart_putchar(char ch)
 
 char uart_getchar()
 {
-
+    return 0;
 }

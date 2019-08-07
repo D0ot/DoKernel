@@ -92,7 +92,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     pde_ptr->address = ((uint32_t)0x02 << 10); // 0x800000 ~ 0xC00000
     // map (0x800000 ~ 0xC00000) to the same
 
-    Buddy_Element *physical_mem = 0x800000;
+    Buddy_Element *physical_mem = (Buddy_Element*)0x800000;
 
     memset(physical_mem, 0, 1024*4096); //clear the new 4M page
 
@@ -118,6 +118,7 @@ void buddy_init(Buddy_Control *bc, uint32_t base, uint32_t length, Buddy_Element
     bc->buddies_number = page_number;
     bc->base = base;
     bc->buddies_ptr = buddies_ptr;
+    bc->length = length;
 
 
 
@@ -283,7 +284,7 @@ Buddy_Block buddy_alloc_backend(Buddy_Control *bc, uint32_t index, uint8_t level
     if(buddies_ptr[index].is_info_block == 0 || 
        buddies_ptr[index].used == 1)
     {
-        // not a info_block
+        // not a info_block, or it has been used.
         LOG_ERROR("buddy_alloc_backend, arguemnt invalid.")
         bb.size = 0;
         return bb;
@@ -312,14 +313,56 @@ Buddy_Block buddy_alloc_backend(Buddy_Control *bc, uint32_t index, uint8_t level
     return bb;
 }
 
-void* buddy_alloc_byaddr(Buddy_Control *bc, void* addr)
+Buddy_Block buddy_alloc_byaddr(Buddy_Control *bc, void* addr, uint8_t level)
 {
-    LOG_ERROR("buddy_alloc_byaddr() not impelemented.");
-    while(1)
-    {
-        // inf loop
-    }
+    char *func_name = "buddy_alloc_byaddr";
+
+    Buddy_Block bb;
     
+    // first check addr
+    uint32_t u32addr = (uint32_t)addr;
+
+    // range check
+    if(u32addr < bc->base ||
+       u32addr >= bc->base + bc->length ||
+       u32addr + powerof2(level) * PAGE_SIZE > bc->base + bc->length)
+    {
+        LOG_WARNING("%s, argument range invalid. addr = 0x%x, level = %d", func_name, u32addr, level);
+        bb.size = 0;
+        return bb;
+    }
+
+    
+    uint32_t diff = u32addr - bc->base;
+
+    // alignment check
+    // addr should be aligned to 4K
+    if(diff % PAGE_SIZE != 0)
+    {
+        LOG_WARNING("%s, arguemnt 4K alignment invalid. addr = 0x%x", func_name, u32addr);
+        bb.size = 0;
+        return bb;
+    }
+
+    uint32_t index = buddy_get_index_byaddr(bc, addr);
+    // index should be aligned to powerof2(level);
+
+    if(index & ~(0xffffffff << level))
+    {
+        LOG_WARNING("%s, argument level aligment invalid. addr = 0x%x", func_name, u32addr);
+        bb.size = 0;
+        return bb;
+    }
+
+    // here we assume addr is valid
+
+    return buddy_alloc_backend(bc, index, level);
+    
+}
+
+uint32_t buddy_get_index_byaddr(Buddy_Control *bc, void *addr)
+{
+    return ((uint32_t)addr - bc->base) / PAGE_SIZE;
 }
 
 void* buddy_get_addr_byindex(Buddy_Control *bc, uint32_t buddy_ele_index)

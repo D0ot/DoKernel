@@ -73,6 +73,7 @@ typedef struct Buddy_Block_tag
 typedef struct Buddy_Control_tag
 {
     uint32_t base;
+    uint32_t length;
     Buddy_Element *buddies_ptr;
     uint32_t buddies_number;
 } Buddy_Control;
@@ -88,7 +89,10 @@ void memory_init_flush_0();
 // Inltialization of Buddy System
 void buddy_init(Buddy_Control *bc, uint32_t base, uint32_t length, Buddy_Element *buddies_ptr);
 
-// allocation operations
+
+
+
+// ------------------- allocation operations ---------- 
 Buddy_Block buddy_alloc_bypage(Buddy_Control *bc, uint32_t page_count);
 Buddy_Block buddy_alloc_bylevel(Buddy_Control *bc, uint8_t level);
 
@@ -107,18 +111,38 @@ Buddy_Block buddy_alloc_bylevel(Buddy_Control *bc, uint8_t level);
 Buddy_Block buddy_alloc_backend(Buddy_Control *bc, uint32_t index, uint8_t level);
 
 
-void* buddy_alloc_byaddr(Buddy_Control *bc, void* addr);
+/**
+ *  \brief Allocate a Buddy Block at specified address
+ *  \param bc, control structure
+ *  \param addr, specified address
+ *  \param level, the level of buddy
+ *      carefully use it.
+ */
 
-// free operations
+
+Buddy_Block buddy_alloc_byaddr(Buddy_Control *bc, void* addr, uint8_t level);
+
+
+
+
+
+
+// ---------- free operations ----------
 uint8_t buddy_free_byindex(Buddy_Control *bc, uint32_t index);
-uint8_t buddy_free_byaddr(Buddy_Control *bc, void* addr);
+uint8_t buddy_free_byaddr(Buddy_Control *bc, void *addr);
+uint8_t buddy_free_backend(Buddy_Control *bc, void *addr); // same for free_byaddr, not impelemented
 
+
+
+
+// ---------- aux functions ---------- 
 // for the function below
 // real memory operation not involve, purely logical operation
 // or we can say, they are computation
 uint8_t buddy_find_level(uint32_t page_count);
-void* buddy_get_addr_byindex(Buddy_Control *bc, uint32_t buddy_ele_index);
+void *buddy_get_addr_byindex(Buddy_Control *bc, uint32_t buddy_ele_index);
 uint32_t buddy_get_size_byindex(Buddy_Control *bc, uint32_t buddy_ele_index);
+uint32_t buddy_get_index_byaddr(Buddy_Control *bc, void *addr);
 
 
 /**

@@ -89,5 +89,33 @@ void simple_alloc_free_test(void)
 }
 
 
+void fixed_address_test(void)
+{
+    char *func_name = "fixed_address_test";
+    LOG_DEBUG("{ %s start", func_name);
+
+    buddy_debug_show(&global_data->physical_mem);
+    Buddy_Block bb1 = buddy_alloc_byaddr(&global_data->physical_mem, (void*)global_data->physical_mem.base, 0);
+
+    buddy_debug_show(&global_data->physical_mem);
+    Buddy_Block bb2 = buddy_alloc_byaddr(&global_data->physical_mem, (void*)global_data->physical_mem.base + PAGE_SIZE * 2, 1);
+
+    buddy_debug_show(&global_data->physical_mem);
+    buddy_alloc_byaddr(&global_data->physical_mem, (void*)(global_data->physical_mem.base + PAGE_SIZE * 2 + 1), 1);
+
+    buddy_debug_show(&global_data->physical_mem);
+    buddy_alloc_byaddr(&global_data->physical_mem, (void*)(global_data->physical_mem.base + PAGE_SIZE * 3), 1);
+
+    buddy_debug_show(&global_data->physical_mem);
+
+    buddy_free_byaddr(&global_data->physical_mem, bb1.addr);
+    buddy_debug_show(&global_data->physical_mem);
+    buddy_free_byaddr(&global_data->physical_mem, bb2.addr);
+    buddy_debug_show(&global_data->physical_mem);
+
+    LOG_DEBUG("%s end }", func_name);
+}
+
+
 
 #endif 
