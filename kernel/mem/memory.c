@@ -80,7 +80,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     // memory the buddy system itself consumes, is not managed by buddy system
 
     // add a Entry in Page Directory to store buddies element
-    Page_Directory_Entry * pde_ptr = &(global_data->pdes[2]);
+    Page_Directory_Entry * pde_ptr = &(global_data->pdes[512 + 2]);
 
     memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
     pde_ptr->p = 1;     // present
@@ -90,17 +90,58 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     pde_ptr->pcd = 0;   // enable  cache
     pde_ptr->ps = 1;    // ps set, 4M page
     pde_ptr->address = ((uint32_t)0x02 << 10); // 0x800000 ~ 0xC00000
-    // map (0x800000 ~ 0xC00000) to the same
 
-    Buddy_Element *physical_mem = (Buddy_Element*)0x800000;
+    Buddy_Element *physical_mem = (Buddy_Element*)(HIGH_BASE + 0x800000);
 
     memset(physical_mem, 0, 1024*4096); //clear the new 4M page
 
     buddy_init(&global_data->physical_mem, global_data->mmr.base, global_data->mmr.length, physical_mem);
 
 
+
+
+
+
+
+    // THE FOLLOWING IS FOR KERNEL LINEAR ADDRESS 
+
+    // allocate memory for buddy system of kernel's linear address
+    global_data->kernel_mem_bb_in_phy = buddy_alloc_bylevel(&global_data->physical_mem, 10); 
     
-    LOG_INFO("memory_init end}");
+    // add a Entry in Page Directory to store buddies elements for kernel linear address
+    pde_ptr = &(global_data->pdes[512 + 3]);
+
+    memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
+    pde_ptr->p = 1;     // present
+    pde_ptr->rw = 1;    // allow write to the page
+    pde_ptr->us = 0;    // user-mode accessed not allowed
+    pde_ptr->pwt = 0;   // disable write-through
+    pde_ptr->pcd = 0;   // enable  cache
+    pde_ptr->ps = 1;    // ps set, 4M page
+    //pde_ptr->address = ((uint32_t)0x03 << 10); // 0xC00000 ~ 0x1000000
+    pde_ptr->address = ((uint32_t)(global_data->kernel_mem_bb_in_phy.addr) >> 12);
+
+    // Why use magic number 0x80c00000 ? see pdes[512 + 3] below
+    // for we dont have a usable linear adress management system, just hard code it.
+    buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fff0000, 0x80C00000);
+
+    // Global Data
+    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80000000, 10);
+    
+    // Kernel
+    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80400000, 10);
+
+    // Buddy system for Physical memory
+    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80800000, 10);
+
+    // Buddy system for kernel's linear address space
+    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80C00000, 10);
+
+    
+
+
+    
+    LOG_INFO("memory_init end }");
 }
 
 void buddy_init(Buddy_Control *bc, uint32_t base, uint32_t length, Buddy_Element *buddies_ptr)

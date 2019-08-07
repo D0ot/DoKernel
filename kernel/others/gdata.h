@@ -8,6 +8,7 @@
 
 
 #define GLOBAL_DATA_SIZE (0x300000)
+#define GLOBAL_DATA_OFFSET (0x100000)
 
 typedef struct Global_Data_Structure_tag
 {
@@ -26,8 +27,18 @@ typedef struct Global_Data_Structure_tag
     
     uint32_t gdt_entries[32];
     
+    // for physical memory
     Buddy_Control physical_mem;
-    Buddy_Control kernel_linear_mem;
+
+
+    // for kernel linear address
+    // this is a address space for kernel
+    Buddy_Control kernel_mem;
+
+
+    
+    Buddy_Block kernel_mem_bb_in_phy;
+
     
 
 } __attribute__((packed)) Global_Data_Struct;   

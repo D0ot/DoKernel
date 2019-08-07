@@ -69,7 +69,7 @@ _start:
 
 
 try_read_disk:
-            mov ax, 0x1F
+            mov ax, 0x20
             mov ebx, kernel_addr 
             mov ecx, 0x2
             mov bp, 0
@@ -88,13 +88,14 @@ try_read_disk:
             jz _inf_loop_32bit
 
             ; set PDE table address
-            mov eax, (page_dir_addr + (11b << 3))
+            mov eax, ((page_dir_addr) + (11b << 3))
             mov cr3, eax
 
             ; config PDE
             mov dword [page_dir_addr], PDE_0
             mov dword [page_dir_addr + 1 * 4], PDE_1
-            mov dword [page_dir_addr + 511 * 4], PDE_511
+            mov dword [page_dir_addr + 512 * 4], PDE_512
+            mov dword [page_dir_addr + 513 * 4], PDE_513
 
             ; enable Paging
 
@@ -105,7 +106,7 @@ try_read_disk:
             mov esp, 0x7c00
             mov ebp, 0x7c00
 
-            jmp 0x0008:kernel_addr
+            jmp 0x0008:(high_base + kernel_addr)
     _inf_loop_32bit:
             inc eax
             hlt

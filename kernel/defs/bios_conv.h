@@ -9,15 +9,12 @@
 #include "mem/memory.h"
 #include "defs/defs.h"
 
-// it is not a good design
-// TODO, using a more "smart" loader
-#define MAIN_PHYSICAL_MEMORY_START (0x100000) 
 
 // address to which boot.asm load the program 
 #define KERNEL_BASE (void*)(KERNEL_ADDR)
 
 // not using ELF format, so hardcode the max image size
-// for learning purpose, 4Mib will be enough
+// for learning purpose, 4MiB will be enough
 #define KERNEL_SIZE (uint32_t)(0x400000) 
 
 

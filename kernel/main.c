@@ -12,7 +12,6 @@
 #include "others/gdata.h"
 #include "driver/acpi.h"
 
-
 #include "test/test_mem.h"
 
 void main(void);
@@ -24,7 +23,8 @@ void main(void)
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
-    fixed_address_test();
+
+    buddy_debug_show(&global_data->kernel_mem);
 
 
 
