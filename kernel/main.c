@@ -12,9 +12,11 @@
 #include "others/gdata.h"
 #include "driver/acpi.h"
 
+
+#include "test/test_mem.h"
+
 void main(void);
 void exit(void);
-
 
 
 void main(void)
@@ -22,7 +24,7 @@ void main(void)
     uart_init();
     ter_init();
     memory_init(SMAP_ADDR, SMAP_SIZE);
-
+    simple_alloc_free_test();
 
 
 

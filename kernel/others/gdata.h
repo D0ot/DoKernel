@@ -26,8 +26,8 @@ typedef struct Global_Data_Structure_tag
     
     uint32_t gdt_entries[32];
     
-    Buddy_Element *buddies_ptr;
-    uint32_t buddies_number;
+    Buddy_Control physical_mem;
+    Buddy_Control kernel_linear_mem;
     
 
 } __attribute__((packed)) Global_Data_Struct;   

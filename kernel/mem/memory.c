@@ -11,7 +11,7 @@
 
 void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 {
-    LOG_INFO("memory_init start.");
+    LOG_INFO("{memory_init start.");
     LOG_INFO("smap : %x, size : %d", smap, size);
     uint32_t max_usable_length_index = 0;
     uint8_t exist_usable_memory = 0;
@@ -72,31 +72,14 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     x86_lgdt(&(global_data->gdt_limit));
     memory_init_flush_0();
 
-    buddy_init();
-
-
-    
-    LOG_INFO("memory_init end");
-}
-
-void buddy_init()
-{
-    // memory the buddy system itself consume, is not managed by buddy system
-
-    // the max block of this impelementaion is 2^16 Page = 2^16 * 2^12 Byte = 2^28 Byte = 128M-Byte
-
-    LOG_INFO("buddy_init start");
-    uint32_t page_number = global_data->mmr.length / (1024*4);
-    LOG_INFO("Avaliable page_nubmer : 0x%x", page_number);
-    uint32_t mem_res = global_data->mmr.length % (1024*4);
-    LOG_INFO("Abandoned memory, mem_res : 0x%x", mem_res);
-    global_data->mmr.length -= mem_res; // some of the memory is "useless" for they are smaller than 4K-Byte(size of page).
-
-    global_data->buddies_number = page_number;
 
 
 
-    //add a Entry in Page Directory to store buddies element
+    // perpare a page frame to store buddies about physical memory
+
+    // memory the buddy system itself consumes, is not managed by buddy system
+
+    // add a Entry in Page Directory to store buddies element
     Page_Directory_Entry * pde_ptr = &(global_data->pdes[2]);
 
     memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
@@ -109,16 +92,40 @@ void buddy_init()
     pde_ptr->address = ((uint32_t)0x02 << 10); // 0x800000 ~ 0xC00000
     // map (0x800000 ~ 0xC00000) to the same
 
+    Buddy_Element *physical_mem = 0x800000;
 
-    Buddy_Element *buddies_ptr = (Buddy_Element*)(0x800000);
-    global_data->buddies_ptr = buddies_ptr;
-    memset(buddies_ptr, 0, sizeof(Buddy_Element) * page_number); //clear the new 4M page
+    memset(physical_mem, 0, 1024*4096); //clear the new 4M page
+
+    buddy_init(&global_data->physical_mem, global_data->mmr.base, global_data->mmr.length, physical_mem);
+
+
+    
+    LOG_INFO("memory_init end}");
+}
+
+void buddy_init(Buddy_Control *bc, uint32_t base, uint32_t length, Buddy_Element *buddies_ptr)
+{
+
+    // the max block of this impelementaion is 2^(BUDDY_MAX_LEVEL) Page 
+    // BUDDY_MAX_LEVEL is in memory.h
+
+    LOG_INFO("{ buddy_init start, base:0x%x, length:0x%x", base, length);
+    uint32_t page_number = length / PAGE_SIZE;
+    LOG_INFO("Avaliable page_nubmer : 0x%x", page_number);
+    uint32_t mem_res = length % PAGE_SIZE;
+    LOG_INFO("Abandoned memory, mem_res : 0x%x", mem_res);
+
+    bc->buddies_number = page_number;
+    bc->base = base;
+    bc->buddies_ptr = buddies_ptr;
+
+
 
     for(uint32_t i = 0; i < page_number;)
     {
         uint32_t avaliable_now = page_number - i;
         uint8_t max_power = 0;
-        while(poweru32(2, max_power) <= avaliable_now && (max_power <= 16))
+        while(poweru32(2, max_power) <= avaliable_now && (max_power <= BUDDY_MAX_LEVEL + 1))
         {
             ++max_power;
         }
@@ -126,41 +133,17 @@ void buddy_init()
         uint8_t found_buddy_level = max_power - 1;
         buddies_ptr[i].level = found_buddy_level;   // we found the highest level buddy from avaliable page!
         buddies_ptr[i].is_info_block = 1;           // indicating that it is a control block
-        LOG_INFO("A buddy found at index : 0x%x, level : %d, addr : 0x%x ", i, found_buddy_level, buddy_get_addr_byindex(i));
-
-
-        uint32_t endpos = poweru32(2, found_buddy_level) + i;
-        // set left-right state of a buddy element
-        for(int8_t iter_level = (found_buddy_level == 16 ? 15 : found_buddy_level); iter_level >= 0; --iter_level)
-        {
-            uint32_t iter = i;
-            uint32_t step = poweru32(2, iter_level);
-            uint8_t lr = 0; // 0 for left, 1 for right
-
-            while(iter < endpos)
-            {
-                if(lr)
-                {
-                    buddies_ptr[iter].lr |= (1 << iter_level);
-                } else
-                {
-                    buddies_ptr[iter].lr &= ~(1 << iter_level);
-                }
-
-                iter += step;
-                lr = !lr;
-            }
-
-        }
+        LOG_INFO("A buddy found at index : 0x%x, level : %d, addr : 0x%x ", i, found_buddy_level, buddy_get_addr_byindex(bc, i));
+        
         i += poweru32(2, found_buddy_level);
     }
 
-    LOG_INFO("buddy_init end");
+    LOG_INFO("buddy_init end }");
 }
 
 // it returns physical address and block size in Byte
 // all zeor for failed allocation
-Buddy_Block buddy_alloc_bypage(uint32_t page_count)
+Buddy_Block buddy_alloc_bypage(Buddy_Control *bc, uint32_t page_count)
 {
     uint8_t level = buddy_find_level(page_count);
     LOG_DEBUG("buddy level calculated is : %d", level);
@@ -172,9 +155,7 @@ Buddy_Block buddy_alloc_bypage(uint32_t page_count)
         return bb;
     }
 
-    bb.addr = buddy_alloc_bylevel(level);
-    bb.size = PAGE_SIZE * powerof2(level);
-    return bb; 
+    return buddy_alloc_bylevel(bc, level);
 }
 
 
@@ -211,10 +192,10 @@ uint8_t buddy_find_level(uint32_t page_count)
  
 }
 
-void* buddy_alloc_bylevel(uint8_t level)
+Buddy_Block buddy_alloc_bylevel(Buddy_Control *bc, uint8_t level)
 {
-    uint32_t buddies_number = global_data->buddies_number;
-    Buddy_Element * buddies_ptr = global_data->buddies_ptr;
+    uint32_t buddies_number = bc->buddies_number;
+    Buddy_Element * buddies_ptr = bc->buddies_ptr;
     uint32_t iter = 0;
     uint8_t min_index_init_guard = 0; // if set, indicating min_index in correctly inited.
     uint32_t min_index;     // the buddy element satisfy the following condition: 
@@ -233,7 +214,7 @@ void* buddy_alloc_bylevel(uint8_t level)
         {
             if(level == buddies_ptr[iter].level)
             {
-                //found the suitable prefectly
+                //found the a buddy prefectly
                 break;
             } 
             else if(level > buddies_ptr[iter].level)
@@ -266,51 +247,72 @@ void* buddy_alloc_bylevel(uint8_t level)
     }
 
 
-
-
-    // prefectly match, use it
-    if(iter < buddies_number && buddies_ptr[iter].level == level)
-    {
-        buddies_ptr[iter].used = 1;
-
-        for(uint32_t i = 1; i < powerof2(level); ++i)
-        {
-            buddies_ptr[iter + i].is_info_block = 1;
-        }
-        
-        // return a valid addres
-        return buddy_get_addr_byindex(iter); 
-    }
-
     if(iter >= buddies_number && !min_index_init_guard)
     {
         // min_index_init_guard is not set
         // indiciating that we did not find any blocks larger than the requested one.
         // nothing is found
         LOG_WARNING("buddy_alloc_bylevel failed. level : 0x%x", level);
-        return 0;
+        Buddy_Block bb;
+        bb.size = 0;
+        return bb;
     }
 
-    // we have to split a block to get suitable block
 
-    for(uint8_t split_times = buddies_ptr[min_index].level - level; split_times; --split_times)
+    uint32_t to_alloc_index;
+
+    if(iter < buddies_number)
     {
-        // do split sutff
-        uint8_t new_level = buddies_ptr[min_index].level - 1;
-        buddies_ptr[min_index].level = new_level;
-        buddies_ptr[min_index].is_info_block = 1;
-
-        buddies_ptr[min_index + powerof2(new_level)].level = new_level;
-        buddies_ptr[min_index + powerof2(new_level)].is_info_block = 1;
+        to_alloc_index = iter;
+    }
+    else
+    {
+        to_alloc_index = min_index;
     }
 
+    return buddy_alloc_backend(bc, to_alloc_index, level);
+    
 
-    buddies_ptr[min_index].used = 1; 
-
-    return buddy_get_addr_byindex(min_index);
 }
 
-void* buddy_alloc_byaddr(void* addr)
+Buddy_Block buddy_alloc_backend(Buddy_Control *bc, uint32_t index, uint8_t level)
+{
+    Buddy_Element *buddies_ptr = bc->buddies_ptr;
+    Buddy_Block bb;
+    
+    if(buddies_ptr[index].is_info_block == 0 || 
+       buddies_ptr[index].used == 1)
+    {
+        // not a info_block
+        LOG_ERROR("buddy_alloc_backend, arguemnt invalid.")
+        bb.size = 0;
+        return bb;
+    }
+
+    if(level > buddies_ptr[index].level)
+    {
+        LOG_ERROR("buddy_alloc_backend, argument invalid : level");
+        bb.size = 0;
+        return bb;
+    }
+
+    uint32_t iter = index;
+    while(buddies_ptr[iter].level != level)
+    {
+        // now level
+        uint8_t nl = buddies_ptr[iter].level;
+        buddies_ptr[iter + powerof2(nl - 1)].is_info_block = 1;
+        buddies_ptr[iter + powerof2(nl - 1)].level = nl - 1;
+        buddies_ptr[iter].level = nl - 1;
+    }
+    buddies_ptr[index].used = 1;
+    bb.addr = buddy_get_addr_byindex(bc, index);
+    bb.size = buddy_get_size_byindex(bc, index);
+    LOG_INFO("buddy_alloc_backend, bb.addr = 0x%x, bb.size = 0x%x", bb.addr, bb.size);
+    return bb;
+}
+
+void* buddy_alloc_byaddr(Buddy_Control *bc, void* addr)
 {
     LOG_ERROR("buddy_alloc_byaddr() not impelemented.");
     while(1)
@@ -320,51 +322,50 @@ void* buddy_alloc_byaddr(void* addr)
     
 }
 
-void* buddy_get_addr_byindex(uint32_t buddy_ele_index)
+void* buddy_get_addr_byindex(Buddy_Control *bc, uint32_t buddy_ele_index)
 {
-    return (void*)(global_data->mmr.base + PAGE_SIZE * buddy_ele_index);
+    return (void*)(bc->base + PAGE_SIZE * buddy_ele_index);
 }
 
-uint32_t buddy_get_size_byindex(uint32_t buddy_ele_index)
+uint32_t buddy_get_size_byindex(Buddy_Control *bc, uint32_t buddy_ele_index)
 {
-    return PAGE_SIZE * powerof2(global_data->buddies_ptr[buddy_ele_index].level);
-
+    return PAGE_SIZE * powerof2(bc->buddies_ptr[buddy_ele_index].level);
 }
 
 
-void buddy_debug_show()
+void buddy_debug_show(Buddy_Control *bc)
 {
-    Buddy_Element *buddies_ptr = global_data->buddies_ptr;
+    Buddy_Element *buddies_ptr = bc->buddies_ptr;
     LOG_DEBUG("buddy_debug_show");
-    for(uint32_t index = 0; index < global_data->buddies_number;)
+    for(uint32_t index = 0; index < bc->buddies_number;)
     {
         LOG_DEBUG
         (
-            "index:0x%x level:%d used:%d lr:0x%x",
-            index, buddies_ptr[index].level, buddies_ptr[index].used, buddies_ptr[index].lr
+            "index:0x%x level:%d used:%d",
+            index, buddies_ptr[index].level, buddies_ptr[index].used
         );
 
         LOG_DEBUG
         (
             "addr:0x%x size:0x%x endaddr:0x%x",
-            buddy_get_addr_byindex(index),
-            buddy_get_size_byindex(index),
-            buddy_get_addr_byindex(index) + buddy_get_size_byindex(index)
+            buddy_get_addr_byindex(bc, index),
+            buddy_get_size_byindex(bc, index),
+            buddy_get_addr_byindex(bc, index) + buddy_get_size_byindex(bc, index)
         );
 
         index += powerof2(buddies_ptr[index].level);
     }
 }
 
-uint8_t buddy_free_byindex(uint32_t index)
+uint8_t buddy_free_byindex(Buddy_Control *bc, uint32_t index)
 {
-    if(index >= global_data->buddies_number)
+    if(index >= bc->buddies_number)
     {
         LOG_ERROR("buddy_free_byindex, index:(0x%x) >= buddies_number", index);
         while(1);
     }
 
-    Buddy_Element *buddies_ptr = global_data->buddies_ptr;
+    Buddy_Element *buddies_ptr = bc->buddies_ptr;
 
     if(!buddies_ptr[index].used)
     {
@@ -377,7 +378,7 @@ uint8_t buddy_free_byindex(uint32_t index)
     while(1)
     {
         uint8_t level = buddies_ptr[current_index].level;
-        uint8_t lr = (buddies_ptr[current_index].lr >> level) & 0x01;
+        uint8_t lr = (current_index & (1 << buddies_ptr[current_index].level));
 
 
         if(!lr)
@@ -393,6 +394,7 @@ uint8_t buddy_free_byindex(uint32_t index)
             {
                 buddies_ptr[current_index].level = level + 1;
                 buddies_ptr[ele_at_right].is_info_block = 0;
+                buddies_ptr[ele_at_right].used = 0;
                 
                 // we dont have to update current_index
                 // for we are the left
@@ -418,6 +420,7 @@ uint8_t buddy_free_byindex(uint32_t index)
             {
                 buddies_ptr[ele_at_left].level = level + 1;
                 buddies_ptr[current_index].is_info_block = 0;
+                buddies_ptr[current_index].used = 0;
 
                 current_index = ele_at_left;
             }
@@ -434,15 +437,28 @@ uint8_t buddy_free_byindex(uint32_t index)
     return 0;    
 }
 
+uint32_t buddy_get_infoblock_byindex(Buddy_Control *bc, uint32_t index)
+{
+    for(uint8_t i = 0; i <= BUDDY_MAX_LEVEL; ++i)
+    {
+        uint32_t masked = index & (0xffffffff << i);
+        if(bc->buddies_ptr[masked].is_info_block)
+        {
+            return masked;
+        }
+    }
+    return index;
 
-uint8_t buddy_free_byaddr(void* addr)
+}
+
+uint8_t buddy_free_byaddr(Buddy_Control *bc, void* addr)
 {
     // convert addr to uint32_t for convenience
-    int32_t diff = (uint32_t)addr - global_data->mmr.base;
+    int32_t diff = (uint32_t)addr - bc->base;
 
     if(diff < 0)
     {
-        LOG_ERROR("buddy_free_byaddr, addr:(0x%x) not higher than mmr.base", addr);
+        LOG_ERROR("buddy_free_byaddr, addr:(0x%x) not higher than base", addr);
         while(1);
     }
 
@@ -456,6 +472,6 @@ uint8_t buddy_free_byaddr(void* addr)
     uint32_t buddy_index = diff / PAGE_SIZE;
 
     LOG_INFO("free index 0x%x", buddy_index);
-    return buddy_free_byindex(buddy_index);
+    return buddy_free_byindex(bc, buddy_index);
 
 }

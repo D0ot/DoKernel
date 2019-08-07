@@ -87,6 +87,14 @@ uint8_t paging_add_fixed(Paging_Strcut *ps, uint8_t page_size, void *linear_addr
 
 
 /**
+ *  \breif Delete a page in Paging Structre
+ *  \param linerar_address is the page to delete
+ */
+
+uint8_t pagign_del(Paging_Strcut *ps, void *linear_address);
+
+
+/**
  *  \breif Transalte a linear address to physical address
  *  \return 0 for success, others for failure
  *      
@@ -94,7 +102,12 @@ uint8_t paging_add_fixed(Paging_Strcut *ps, uint8_t page_size, void *linear_addr
  */
 void *paging_translate(Paging_Strcut *ps, void *linear_address);
 
+/**
+ *  \brief modify the attribute of 4K Page.
+ *  \param only attributes in pte affect.
+ */
 
+uint8_t paging_set_attribute(Paging_Strcut *ps, void *linear_address, Page_Table_Entry pte);
 
 
 
