@@ -21,7 +21,7 @@ typedef struct Page_Directory_Entry_tag
     // Read/write; if 0, writes may not be allowed to the 4MByte page referenced by this entry
     uint8_t rw : 1;
 
-    // User/supervisor
+    // User/supervisor, if 0, user-mode accessed may not be allowed
     uint8_t us : 1;
 
     // Page-level write-through

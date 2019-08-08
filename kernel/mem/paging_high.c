@@ -20,7 +20,7 @@ uint8_t paging_init(Paging_Strcut *ps, Buddy_Control *phy_bc, Buddy_Control *lin
     ps->linear_mem = lin_bc;
     ps->meta_bb_phy = meta_bb_phy;
     ps->meta_bb_lin = meta_bb_lin;
-    memset(meta_bb_lin.addr, 0, PAGE_SIZE);
+    ps->wbb_count = 0;
     return 0;
 }
 
@@ -72,7 +72,29 @@ uint8_t paging_add_backend(Paging_Strcut *ps, uint8_t page_size, void *linear_ad
     }
     else if(page_size == PAGE_SIZE_4K)
     {
-        LOG_ERROR("add 4k page not impelemented");
+        uint32_t u32linaddr = (uint32_t)linear_address;
+        uint32_t u32phyaddr = (uint32_t)physical_address;
+        Page_Directory_Entry* pdes_ptr = (ps->meta_bb_lin.addr);
+
+
+        Page_Directory_Entry* pde = &(pdes_ptr[u32linaddr >> 20]);
+
+        if(pde->p)
+        {
+            // page table exist, add a new page
+
+            uint32_t pte_addr = pde->address << 20;
+
+        } 
+        else
+        {
+            // page table not exist, we have to acquire a new one
+
+        }
+
+
+
+
     }
 
 

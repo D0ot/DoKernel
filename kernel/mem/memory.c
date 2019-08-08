@@ -118,37 +118,72 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     pde_ptr->pwt = 0;   // disable write-through
     pde_ptr->pcd = 0;   // enable  cache
     pde_ptr->ps = 1;    // ps set, 4M page
-    //pde_ptr->address = ((uint32_t)0x03 << 10); // 0xC00000 ~ 0x1000000
     pde_ptr->address = ((uint32_t)(global_data->kernel_mem_bb_in_phy.addr) >> 12);
 
-    // Why use magic number 0x80c00000 ? see pdes[512 + 3] below
+
+
+
+    // Why use magic number 0x80c00000 ? see pdes[512 + 3] above
     // for we dont have a usable linear adress management system, just hard code it.
-    buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fffffff, 0x80C00000);
+    buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fffffff, (Buddy_Element*)0x80C00000);
 
     // Global Data
-    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80000000, 10);
+    buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80000000, 10);
     
     // Kernel
-    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80400000, 10);
+    buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80400000, 10);
 
     // Buddy system for Physical memory
-    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80800000, 10);
+    buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80800000, 10);
 
     // Buddy system for kernel's linear address space
-    buddy_alloc_byaddr(&global_data->kernel_mem, 0x80C00000, 10);
+    buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80C00000, 10);
 
 
+    // THE FOLLOWING IS FOR PAGING
+    // manually setup the first Paging Struct
+    // dose not use paging_ini
+    Paging_Strcut *ps = &global_data->ps;
+    
+    ps->linear_mem = &global_data->kernel_mem;
+    ps->physical_mem = &global_data->physical_mem;
 
-    // one for Page System, meta_bb_phy
-    Buddy_Block ptes_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
+    ps->meta_bb_phy.addr = (void*)(0 + GLOBAL_DATA_OFFSET);
+    ps->meta_bb_phy.size = sizeof(global_data->pdes);
 
-    pde_ptr = &(global_data->pdes[512 + 4]);
-    memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
-    pde_ptr->p = 1;
-    pde_ptr->rw = 1;
-    // set the physical address of PTE
-    pde_ptr->address = ((uint32_t)ptes_bb.addr >> 12);
+    ps->meta_bb_lin.addr = (void*)(HIGH_BASE + GLOBAL_DATA_OFFSET);
+    ps->meta_bb_lin.size = ps->meta_bb_phy.size;
 
+    ps->root.pcd = 1;
+    ps->root.pwt = 1;
+    ps->root.address = (uint32_t)(ps->meta_bb_phy.addr) >> 12;
+
+    ps->wbb_count = 0;
+
+
+    
+    // add a new PDE
+    Page_Directory_Entry *pde2_ptr = global_data->pdes + 512 + 4;
+
+    pde2_ptr->p = 1;
+    pde2_ptr->rw = 1;
+    // minus HIGH_BASE to get physical address
+    pde2_ptr->address = ((uint32_t)(&global_data->ptes[0]) - HIGH_BASE) >> 12;
+
+
+    // add a new PTE
+    Page_Table_Entry *pte_ptr = global_data->ptes;
+    pte_ptr[0].p = 1;
+    pte_ptr[0].rw = 1;
+
+    Buddy_Block tmp_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
+
+    pte_ptr[0].address = (uint32_t)(tmp_bb.addr) >> 12;
+
+
+    
+
+    
     
 
 
@@ -156,12 +191,8 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
 
 
+
     
-
-
-
-
-
 
     
     LOG_INFO("memory_init end }");

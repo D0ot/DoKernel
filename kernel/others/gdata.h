@@ -5,6 +5,7 @@
 #include "mem/memory.h"
 #include "arch/x86/paging.h"
 #include "defs/bios_conv.h"
+#include "mem/paging_high.h"
 
 
 #define GLOBAL_DATA_SIZE (0x300000)
@@ -16,8 +17,9 @@ typedef struct Global_Data_Structure_tag
     Page_Directory_Entry pdes[1024];
 
     // Page Table Entry
-    // for temp use
-    Page_Table_Entry pte;
+    Page_Table_Entry ptes[1024];
+
+    Paging_Strcut ps;
     
     // Main Memory Region
     // kerne not contained
