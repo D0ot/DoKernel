@@ -14,6 +14,10 @@ typedef struct Global_Data_Structure_tag
 {
     // Page Directory Entries
     Page_Directory_Entry pdes[1024];
+
+    // Page Table Entry
+    // for temp use
+    Page_Table_Entry pte;
     
     // Main Memory Region
     // kerne not contained

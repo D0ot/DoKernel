@@ -123,7 +123,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
     // Why use magic number 0x80c00000 ? see pdes[512 + 3] below
     // for we dont have a usable linear adress management system, just hard code it.
-    buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fff0000, 0x80C00000);
+    buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fffffff, 0x80C00000);
 
     // Global Data
     buddy_alloc_byaddr(&global_data->kernel_mem, 0x80000000, 10);
@@ -137,7 +137,30 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     // Buddy system for kernel's linear address space
     buddy_alloc_byaddr(&global_data->kernel_mem, 0x80C00000, 10);
 
+
+
+    // one for Page System, meta_bb_phy
+    Buddy_Block ptes_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
+
+    pde_ptr = &(global_data->pdes[512 + 4]);
+    memset(pde_ptr, 0, sizeof(Page_Directory_Entry));
+    pde_ptr->p = 1;
+    pde_ptr->rw = 1;
+    // set the physical address of PTE
+    pde_ptr->address = ((uint32_t)ptes_bb.addr >> 12);
+
     
+
+
+
+
+
+
+    
+
+
+
+
 
 
     
