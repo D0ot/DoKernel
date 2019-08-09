@@ -162,24 +162,6 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
 
     
-    // add a new PDE
-    Page_Directory_Entry *pde2_ptr = global_data->pdes + 512 + 4;
-
-    pde2_ptr->p = 1;
-    pde2_ptr->rw = 1;
-    // minus HIGH_BASE to get physical address
-    pde2_ptr->address = ((uint32_t)(&global_data->ptes[0]) - HIGH_BASE) >> 12;
-
-
-    // add a new PTE
-    Page_Table_Entry *pte_ptr = global_data->ptes;
-    pte_ptr[0].p = 1;
-    pte_ptr[0].rw = 1;
-
-    Buddy_Block tmp_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
-
-    pte_ptr[0].address = (uint32_t)(tmp_bb.addr) >> 12;
-
 
     
 
