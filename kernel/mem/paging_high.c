@@ -11,16 +11,32 @@
 
 
 uint8_t paging_init(Paging_Strcut *ps, Buddy_Control *phy_bc, Buddy_Control *lin_bc, 
-                    Buddy_Block meta_bb_phy, Buddy_Block meta_bb_lin, uint8_t wt, uint8_t cd)
+                    Buddy_Block meta_phy_bb, Buddy_Block meta_lin_bb, 
+                    Buddy_Block pre_lin_bb, Buddy_Block pre_phy_bb, 
+                    uint8_t wt, uint8_t cd)
 {
     ps->root.pwt = wt;
     ps->root.pcd = cd;
-    ps->root.address = (uint32_t)meta_bb_phy.addr >> 12;
+    ps->root.address = (uint32_t)meta_phy_bb.addr >> 12;
     ps->physical_mem = phy_bc;
     ps->linear_mem = lin_bc;
-    ps->meta_bb_phy = meta_bb_phy;
-    ps->meta_bb_lin = meta_bb_lin;
+    ps->meta_bb_phy = meta_phy_bb;
+    ps->meta_bb_lin = meta_lin_bb;
     ps->wbb_count = 0;
+
+    ps->first_bb_phy = pre_phy_bb;
+    ps->first_bb_lin = pre_lin_bb;
+
+
+    // acquire a memory space for wbb
+
+    Buddy_Block phy = buddy_alloc_bypage(phy_bc, 1);
+    Buddy_Block lin = buddy_alloc_bypage(lin_bc, 1);
+
+    
+
+
+
     return 0;
 }
 
@@ -74,21 +90,29 @@ uint8_t paging_add_backend(Paging_Strcut *ps, uint8_t page_size, void *linear_ad
     {
         uint32_t u32linaddr = (uint32_t)linear_address;
         uint32_t u32phyaddr = (uint32_t)physical_address;
-        Page_Directory_Entry* pdes_ptr = (ps->meta_bb_lin.addr);
+
+        uint32_t pde_offset = u32linaddr >> 22;
+        uint32_t pte_offset = (u32linaddr >> 12) & 0x3ff;
 
 
-        Page_Directory_Entry* pde = &(pdes_ptr[u32linaddr >> 20]);
+        Page_Directory_Entry *pdes_ptr = (ps->meta_bb_lin.addr);
 
-        if(pde->p)
+        Page_Directory_Entry *pde_ptr = pdes_ptr + pde_offset;
+
+        if(pde_ptr->p)
         {
             // page table exist, add a new page
+            Page_Table_Entry *pte_ptr = (Page_Table_Entry*)(pde_ptr->address << 12) + pte_offset;
 
-            uint32_t pte_addr = pde->address << 20;
+            pte_ptr->p = 1;
+            pte_ptr->rw = 1;
+            pte_ptr->address = ((uint32_t)(physical_address) >> 12);
 
         } 
         else
         {
             // page table not exist, we have to acquire a new one
+
 
         }
 

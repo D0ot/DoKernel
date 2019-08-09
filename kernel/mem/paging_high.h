@@ -46,6 +46,15 @@ typedef struct Paging_Strcut_tag
 
     // linear address to access PDES
     Buddy_Block meta_bb_lin;
+
+
+
+    // for Bootstrap
+    // caller is responsible for these 2 Buddy_Block
+    Buddy_Block first_bb_phy;
+    Buddy_Block first_bb_lin;
+
+
     
     // record how many resources that
     // this Paging Structure accquired
@@ -70,7 +79,9 @@ typedef struct Paging_Strcut_tag
  *      are necessary.
  */
 uint8_t paging_init(Paging_Strcut *ps, Buddy_Control *phy_bc, Buddy_Control *lin_bc, 
-                    Buddy_Block meta_bb_phy, Buddy_Block meta_bb_lin, uint8_t wt, uint8_t cd);
+                    Buddy_Block meta_phy_bb, Buddy_Block meta_lin_bb, 
+                    Buddy_Block pre_lin_bb, Buddy_Block pre_phy_bb,
+                    uint8_t wt, uint8_t cd);
 
 
 /**

@@ -2,7 +2,7 @@ include ../config/config.mk
 
 objects = main.o driver/terminal.o preboot/jumper.o \
 	driver/disk.o common/common.o driver/uart.o log/kdebug.o mem/memory.o \
-	others/gdata.o driver/acpi.o
+	others/gdata.o driver/acpi.o mem/paging_high.o
 
 asm_objects = mem/memory_asm.o
 

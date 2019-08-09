@@ -127,9 +127,12 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     // for we dont have a usable linear adress management system, just hard code it.
     buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fffffff, (Buddy_Element*)0x80C00000);
 
+
+    LOG_DEBUG("sign1");
+
     // Global Data
     buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80000000, 10);
-    
+
     // Kernel
     buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80400000, 10);
 
@@ -138,33 +141,52 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
     // Buddy system for kernel's linear address space
     buddy_alloc_byaddr(&global_data->kernel_mem, (void*)0x80C00000, 10);
+    LOG_DEBUG("sign2");
 
 
     // THE FOLLOWING IS FOR PAGING
-    // manually setup the first Paging Struct
-    // dose not use paging_ini
-    Paging_Strcut *ps = &global_data->ps;
+
+    Buddy_Block pre_lin_bb, pre_phy_bb, meta_phy_bb, meta_lin_bb;
+
+    pre_lin_bb = buddy_alloc_bypage(&global_data->kernel_mem, 1);
+    pre_phy_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
+
+
+    meta_lin_bb.addr = &(global_data->pdes[0]);
+    meta_lin_bb.size = 4096;
+
+    meta_phy_bb.addr = meta_lin_bb.addr - HIGH_BASE;
+    meta_phy_bb.size = 4096;
+
+
+    uint32_t pde2_offset, pte_offset;
     
-    ps->linear_mem = &global_data->kernel_mem;
-    ps->physical_mem = &global_data->physical_mem;
+    pde2_offset = ((uint32_t)(pre_lin_bb.addr) >> 22);
+    pte_offset = ((uint32_t)(pre_lin_bb.addr) >> 12) & 0x3ff;
 
-    ps->meta_bb_phy.addr = (void*)(0 + GLOBAL_DATA_OFFSET);
-    ps->meta_bb_phy.size = sizeof(global_data->pdes);
+    Page_Directory_Entry *pde2_ptr = global_data->pdes + pde2_offset;
+    pde2_ptr->p = 1;
+    pde2_ptr->rw = 1;
+    pde2_ptr->address = ((uint32_t)(global_data->ptes) - HIGH_BASE) >> 12;
 
-    ps->meta_bb_lin.addr = (void*)(HIGH_BASE + GLOBAL_DATA_OFFSET);
-    ps->meta_bb_lin.size = ps->meta_bb_phy.size;
+    Page_Table_Entry *pte_ptr = global_data->ptes + pte_offset;
 
-    ps->root.pcd = 1;
-    ps->root.pwt = 1;
-    ps->root.address = (uint32_t)(ps->meta_bb_phy.addr) >> 12;
+    pte_ptr->p = 1;
+    pte_ptr->rw = 1;
+    pte_ptr->address = (uint32_t)(pre_phy_bb.addr) >> 12;
 
-    ps->wbb_count = 0;
-
-
+    paging_init(&global_data->ps,
+                &global_data->physical_mem,
+                &global_data->kernel_mem, 
+                meta_phy_bb,
+                meta_lin_bb,
+                pre_lin_bb, 
+                pre_phy_bb, 
+                1,
+                1);    
     
-
-    
-
+    // *(uint32_t*)(pre_lin_bb.addr) = 0x1234;
+    // LOG_DEBUG("phy addr : 0x%x", pre_phy_bb.addr);
     
     
 
@@ -422,6 +444,7 @@ Buddy_Block buddy_alloc_byaddr(Buddy_Control *bc, void* addr, uint8_t level)
     }
 
     uint32_t index = buddy_get_index_byaddr(bc, addr);
+
     // index should be aligned to powerof2(level);
 
     if(index & ~(0xffffffff << level))
