@@ -15,11 +15,15 @@ uint8_t paging_init(Paging_Strcut *ps, Buddy_Control *phy_bc, Buddy_Control *lin
                     Buddy_Block pre_lin_bb, Buddy_Block pre_phy_bb, 
                     uint8_t wt, uint8_t cd)
 {
+    // pre_lin_bb and pre_phy_bb
+    // will only be used here
+
     ps->root.pwt = wt;
     ps->root.pcd = cd;
     ps->root.address = (uint32_t)meta_phy_bb.addr >> 12;
     ps->physical_mem = phy_bc;
     ps->linear_mem = lin_bc;
+    ps->kernel_mem = lin_bc;
     ps->meta_bb_phy = meta_phy_bb;
     ps->meta_bb_lin = meta_lin_bb;
     ps->wbb_count = 0;
@@ -28,12 +32,42 @@ uint8_t paging_init(Paging_Strcut *ps, Buddy_Control *phy_bc, Buddy_Control *lin
     ps->first_bb_lin = pre_lin_bb;
 
 
-    // acquire a memory space for wbb
+    // acquire a page for first PTE
+    Buddy_Block tmp_lin_bb = buddy_alloc_bypage(lin_bc, 1);
+    Buddy_Block tmp_phy_bb = buddy_alloc_bypage(phy_bc, 1);
 
-    Buddy_Block phy = buddy_alloc_bypage(phy_bc, 1);
-    Buddy_Block lin = buddy_alloc_bypage(lin_bc, 1);
+    uint32_t pte_offset = paging_aux_offset_pte(tmp_lin_bb.addr);
+
+    Page_Table_Entry *tmp_pte_ptr = (PTE_t*)pre_lin_bb.addr + pte_offset;
+    tmp_pte_ptr->p = 1;
+    tmp_pte_ptr->rw = 1;
+    tmp_pte_ptr->address = paging_aux_addr_inpte(tmp_phy_bb.addr); 
+
+    PDE_t *pde_ptr = (PDE_t*)(meta_lin_bb.addr) + paging_aux_offset_pde(tmp_lin_bb.addr);
+
+    if(pde_ptr->p)
+    {
+        while(1);
+    }
+
+    pde_ptr->p = 1;
+    pde_ptr->rw = 1;
+
+
+    pde_ptr->address = paging_aux_addr_inpde(pre_phy_bb.addr);
+
+
+    LOG_DEBUG("tmp_lin.addr : 0x%x", tmp_lin_bb.addr);
+    LOG_DEBUG("tmp_phy.addr : 0x%x", tmp_phy_bb.addr);
+
+
+
+
+
 
     
+    
+
 
 
 
@@ -112,6 +146,7 @@ uint8_t paging_add_backend(Paging_Strcut *ps, uint8_t page_size, void *linear_ad
         else
         {
             // page table not exist, we have to acquire a new one
+            
 
 
         }
@@ -122,5 +157,26 @@ uint8_t paging_add_backend(Paging_Strcut *ps, uint8_t page_size, void *linear_ad
     }
 
 
-
 }
+
+uint32_t paging_aux_addr_inpde(void *phy_address)
+{
+    return (uint32_t)phy_address >> 12;
+}
+
+uint32_t paging_aux_addr_inpte(void *phy_address)
+{
+    return (uint32_t)phy_address >> 12;
+}
+
+uint32_t paging_aux_offset_pde(void *lin_address)
+{
+    return (uint32_t)lin_address >> 22;
+}
+
+uint32_t paging_aux_offset_pte(void *lin_address)
+{
+    // 0x3ff equals to 11_1111_1111b
+    return ((uint32_t)lin_address >> 12) & 0x3ff;
+}
+

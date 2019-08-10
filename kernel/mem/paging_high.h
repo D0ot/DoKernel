@@ -36,8 +36,15 @@ typedef struct Paging_Strcut_tag
 {
     Data_In_CR3 root;
 
+    // map linear to physicl
+    // they are abstruct
     Buddy_Control *physical_mem;
     Buddy_Control *linear_mem;
+
+
+    // kernel address space
+    // all things are accessible are in kernel's address space
+    Buddy_Control *kernel_mem;
 
     // physical adress to store PDES
     // caller of paging_init shoud ensure 
@@ -139,6 +146,30 @@ void *paging_translate(Paging_Strcut *ps, void *linear_address);
 
 uint8_t paging_set_attribute(Paging_Strcut *ps, void *linear_address, Page_Table_Entry pte);
 
+/**
+ *  \brief calculate the address in PDE which references a PTE
+ *  \pararm  
+ */
+
+uint32_t paging_aux_addr_inpde(void *phy_address);
+
+
+/**
+ *  \brief calculate the address in PTE which references a Page Frame
+ */
+
+uint32_t paging_aux_addr_inpte(void *phy_address);
+
+/**
+ *  \brief get offset of 'PDE_t *' from linear address
+ */
+uint32_t paging_aux_offset_pde(void *lin_address);
+
+/**
+ *  \brief get offset of 'PTE_t *' from linear address
+ */
+
+uint32_t paging_aux_offset_pte(void *lin_address);
 
 
 

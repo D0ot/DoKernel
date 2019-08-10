@@ -122,7 +122,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
 
 
-
+    memset((void*)0x80c00000, 0, 1024 * 4096);
     // Why use magic number 0x80c00000 ? see pdes[512 + 3] above
     // for we dont have a usable linear adress management system, just hard code it.
     buddy_init(&global_data->kernel_mem, 0x80000000, 0x7fffffff, (Buddy_Element*)0x80C00000);
@@ -148,7 +148,10 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
 
     Buddy_Block pre_lin_bb, pre_phy_bb, meta_phy_bb, meta_lin_bb;
 
-    pre_lin_bb = buddy_alloc_bypage(&global_data->kernel_mem, 1);
+    // get a level 10 for
+    // not get a same PDE
+    pre_lin_bb = buddy_alloc_bylevel(&global_data->kernel_mem, 10);
+    
     pre_phy_bb = buddy_alloc_bypage(&global_data->physical_mem, 1);
 
 
@@ -175,6 +178,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
     pte_ptr->rw = 1;
     pte_ptr->address = (uint32_t)(pre_phy_bb.addr) >> 12;
 
+    
     paging_init(&global_data->ps,
                 &global_data->physical_mem,
                 &global_data->kernel_mem, 
@@ -183,7 +187,7 @@ void memory_init(const Mem_SMAP_Entry* smap, uint32_t size)
                 pre_lin_bb, 
                 pre_phy_bb, 
                 1,
-                1);    
+                1);
     
     // *(uint32_t*)(pre_lin_bb.addr) = 0x1234;
     // LOG_DEBUG("phy addr : 0x%x", pre_phy_bb.addr);

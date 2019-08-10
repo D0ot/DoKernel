@@ -51,6 +51,7 @@ typedef struct Page_Directory_Entry_tag
 
 } __attribute__((packed)) Page_Directory_Entry;
 
+typedef Page_Directory_Entry PDE_t;
 
 typedef struct Page_Table_Entry_tag
 {
@@ -89,5 +90,6 @@ typedef struct Page_Table_Entry_tag
 
 } __attribute__((packed)) Page_Table_Entry;
 
+typedef Page_Table_Entry PTE_t;
 
 #endif
